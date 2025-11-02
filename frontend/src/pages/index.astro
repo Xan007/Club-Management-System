@@ -1,17 +1,22 @@
+---
 import BaseLayout from '../layouts/BaseLayout.astro'
-import logoClub from '../assets/logo_corpmeta.png'
-import heroBackground from '../assets/fondoclub.png'
+import logoClub from 'src/assets/logo_corpmeta.png'
+import heroBackground from 'src/assets/fondoclub.png'
 ---
 
 <BaseLayout title="Corporacion Club del Meta">
   <section class="hero" aria-labelledby="hero-heading">
-    <div class="hero__background" aria-hidden="true"></div>
+    <div
+      class="hero__background"
+      aria-hidden="true"
+      style={`background-image: linear-gradient(rgba(4, 14, 32, 0.15), rgba(4, 14, 32, 0.4)), url(${heroBackground.src});`}
+    ></div>
     <div class="hero__layer" aria-hidden="true"></div>
 
     <div class="hero__wrap">
       <header class="hero__header">
         <div class="hero__identity">
-          <img src={logoClub} alt="Logo Corporacion Club del Meta" class="hero__logo" />
+          <img src={logoClub.src} alt="Logo Corporacion Club del Meta" class="hero__logo" />
           <span class="hero__name">Corporacion Club del Meta</span>
         </div>
         <nav class="hero__languages" aria-label="Selector de idioma">
@@ -70,7 +75,11 @@ import heroBackground from '../assets/fondoclub.png'
   </section>
 
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Outfit:wght@400;500;600;700&display=swap');
+
+    :global(body) {
+      font-family: 'Outfit', sans-serif;
+    }
 
     .hero {
       position: relative;
@@ -81,14 +90,13 @@ import heroBackground from '../assets/fondoclub.png'
       display: flex;
       align-items: center;
       justify-content: center;
-      padding: clamp(2.5rem, 6vw, 4.5rem);
-      background: #07193a;
+  padding: clamp(2.5rem, 6vw, 4.5rem);
+  background: #07193a;
     }
 
     .hero__background {
       position: absolute;
       inset: 0;
-      background-image: linear-gradient(rgba(4, 14, 32, 0.15), rgba(4, 14, 32, 0.4)), url({heroBackground.src});
       background-size: cover;
       background-position: center;
     }
@@ -262,7 +270,7 @@ import heroBackground from '../assets/fondoclub.png'
       color: #ffffff;
       border: 1px solid rgba(255, 255, 255, 0.18);
       transition: background 0.2s ease, border-color 0.2s ease;
-      font-family: 'Inter', sans-serif;
+  font-family: 'Outfit', sans-serif;
     }
 
     .hero__store:hover {
