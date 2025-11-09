@@ -1,0 +1,257 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro'
+import millanuraImg from '../assets/millanura.jpg'
+import barImg from '../assets/bar.jpg'
+import empresarialImg from '../assets/empresarial.jpg'
+import terrazaImg from '../assets/terraza.jpg'
+import kioskoImg from '../assets/kiosko.jpg'
+import presidencialImg from '../assets/presidencial.jpg'
+---
+
+<BaseLayout title="Obtener cotización - Club del Meta">
+  <section class="cotizacion">
+    <header class="cotizacion__header">
+      <h1>Solicita tu cotización</h1>
+      <p>Selecciona el salón, completa los datos y te enviaremos una propuesta personalizada lo antes posible.</p>
+    </header>
+
+    <div class="cotizacion__container">
+      <aside class="cotizacion__media">
+        <img id="salon-image" src={millanuraImg.src} alt="Imagen del salón seleccionado" />
+        <div class="salon-info">
+          <h2 id="salon-title">Mi Llanura</h2>
+          <p id="salon-description">Salón insignia con vista a las áreas verdes, ambientación adaptable y capacidad para 180 asistentes. Ideal para recepciones, matrimonios y eventos corporativos. Incluye accesos, climatización y servicios básicos.</p>
+          <ul id="salon-features">
+            <li>Capacidad: hasta 180 personas</li>
+            <li>Climatización</li>
+            <li>Conexión eléctrica para catering y sonido</li>
+            <li>Acceso para proveedores</li>
+          </ul>
+        </div>
+      </aside>
+
+      <main class="cotizacion__form">
+        <form id="cotizacion-form">
+          <div class="field">
+            <label for="salon">Salón</label>
+            <select id="salon" name="salon" required>
+              <option value="Mi Llanura" data-img={millanuraImg.src} data-desc="Salón insignia con vista a las áreas verdes, ambientación adaptable y capacidad para 180 asistentes.">Mi Llanura</option>
+              <option value="Salón Bar" data-img={barImg.src} data-desc="Ambiente contemporáneo con barra integrada, iluminación escénica y sistema de sonido premium.">Salón Bar</option>
+              <option value="Salón Empresarial" data-img={empresarialImg.src} data-desc="Equipado con pantallas, streaming y mobiliario modular para workshops, conferencias y directorios.">Salón Empresarial</option>
+              <option value="Terraza" data-img={terrazaImg.src} data-desc="Espacio al aire libre con pérgolas, iluminación ambiental y vista privilegiada a las zonas deportivas.">Terraza</option>
+              <option value="Kiosco" data-img={kioskoImg.src} data-desc="Área semiabierta rodeada de jardines, piso en deck y estaciones eléctricas para música en vivo.">Kiosco</option>
+              <option value="Salón Presidente" data-img={presidencialImg.src} data-desc="Espacio exclusivo con mobiliario ejecutivo, insonorización y servicio gourmet personalizado.">Salón Presidente</option>
+            </select>
+          </div>
+
+          <div class="field grid-2">
+            <div>
+              <label for="date">Fecha</label>
+              <input id="date" name="date" type="date" required />
+            </div>
+            <div>
+              <label for="time">Hora de inicio</label>
+              <input id="time" name="time" type="time" required />
+            </div>
+          </div>
+
+          <div class="field grid-2">
+            <div>
+              <label for="duration">Duración (horas)</label>
+              <input id="duration" name="duration" type="number" min="1" max="72" value="4" required />
+            </div>
+            <div>
+              <label for="guests">Cantidad estimada de asistentes</label>
+              <input id="guests" name="guests" type="number" min="1" value="50" />
+            </div>
+          </div>
+
+          <fieldset class="field">
+            <legend>Prestaciones / servicios</legend>
+            <div class="checkboxes">
+              <label><input type="checkbox" name="features" value="Sillas" /> Sillas</label>
+              <label><input type="checkbox" name="features" value="Mesas" /> Mesas</label>
+              <label><input type="checkbox" name="features" value="Sonido" /> Sonido</label>
+              <label><input type="checkbox" name="features" value="Iluminación" /> Iluminación</label>
+              <label><input type="checkbox" name="features" value="Proyector" /> Proyector / Pantalla</label>
+              <label><input type="checkbox" name="features" value="WiFi" /> WiFi</label>
+              <label><input type="checkbox" name="features" value="Catering" /> Catering</label>
+              <label><input type="checkbox" name="features" value="Personal" /> Personal de apoyo</label>
+              <label><input type="checkbox" name="features" value="Estacionamiento" /> Estacionamiento</label>
+            </div>
+          </fieldset>
+
+          <div class="field grid-2">
+            <div>
+              <label><input id="need-chairs" name="needChairs" type="checkbox" /> Requiere sillas</label>
+            </div>
+            <div>
+              <label for="chairs-count">Número de sillas (si aplica)</label>
+              <input id="chairs-count" name="chairsCount" type="number" min="0" value="0" />
+            </div>
+          </div>
+
+          <div class="field">
+            <label for="name">Nombre de contacto</label>
+            <input id="name" name="name" type="text" required />
+          </div>
+
+          <div class="field grid-2">
+            <div>
+              <label for="email">Email</label>
+              <input id="email" name="email" type="email" required />
+            </div>
+            <div>
+              <label for="phone">Teléfono</label>
+              <input id="phone" name="phone" type="tel" />
+            </div>
+          </div>
+
+          <div class="field">
+            <label for="notes">Observaciones adicionales</label>
+            <textarea id="notes" name="notes" rows="4" placeholder="Especifica detalles como montaje, accesos, restricciones, etc."></textarea>
+          </div>
+
+          <div class="actions">
+            <button type="submit">Solicitar cotización</button>
+            <button type="button" id="reset-btn" class="secondary">Limpiar</button>
+          </div>
+        </form>
+
+        <div id="summary" class="summary" hidden>
+          <h3>Resumen de la solicitud</h3>
+          <pre id="summary-content"></pre>
+          <div class="summary-actions">
+            <a id="mailto-link" href="#">Enviar solicitud por correo</a>
+          </div>
+        </div>
+      </main>
+    </div>
+  </section>
+
+  <style>
+    .cotizacion { padding: 3rem 2rem; max-width: 1200px; margin: 0 auto; }
+    .cotizacion__header h1 { font-size: clamp(2rem,5vw,3rem); margin: 0 0 .5rem; }
+    .cotizacion__container { display: grid; grid-template-columns: 420px 1fr; gap: 2rem; align-items: start; }
+
+    .cotizacion__media img { width: 100%; border-radius: 12px; object-fit: cover; height: 260px; display: block; }
+    .salon-info { margin-top: 1rem; color: #374151; }
+    .salon-info h2 { margin: 0 0 .25rem; font-size: 1.25rem; }
+    .salon-info p { margin: 0 0 .5rem; color: #6b7280; }
+    .salon-info ul { margin: .25rem 0 0; padding-left: 1.1rem; color: #374151; }
+
+    form { background: #fff; padding: 1.25rem; border-radius: 12px; box-shadow: 0 8px 32px rgba(2,6,23,0.06); }
+    .field { margin-bottom: 1rem; }
+    label { display:block; font-weight:600; margin-bottom: .4rem; color:#111827 }
+    input[type="text"], input[type="email"], input[type="tel"], input[type="date"], input[type="time"], input[type="number"], select, textarea {
+      width:100%; padding:.6rem .75rem; border-radius:8px; border:1px solid #e5e7eb; background:#fff; box-sizing:border-box;
+    }
+    .grid-2 { display:grid; grid-template-columns:1fr 1fr; gap: .75rem; }
+    fieldset { border:1px solid #e6eef6; padding:.75rem; border-radius:8px; }
+    .checkboxes { display:grid; grid-template-columns: repeat(2, 1fr); gap:.5rem; }
+    .actions { display:flex; gap:.75rem; margin-top: .5rem; }
+    button { padding:.6rem .95rem; border-radius:999px; border:none; background:#0a4ba5; color:#fff; cursor:pointer; font-weight:700 }
+    .secondary { background:transparent; border:1px solid #c7d2fe; color:#0a4ba5 }
+
+    .summary { margin-top:1rem; background:#f8fafc; padding:1rem; border-radius:8px; }
+    .summary pre { white-space:pre-wrap; word-break:break-word; margin:0; }
+
+    @media (max-width: 900px) { .cotizacion__container { grid-template-columns: 1fr; } }
+  </style>
+
+  <script type="module">
+    const salonSelect = document.getElementById('salon')
+    const img = document.getElementById('salon-image')
+    const title = document.getElementById('salon-title')
+    const desc = document.getElementById('salon-description')
+    const featuresList = document.getElementById('salon-features')
+
+    const descriptions = {
+      'Mi Llanura': 'Salón insignia con vista a las áreas verdes, ambientación adaptable y capacidad para 180 asistentes. Ideal para recepciones, matrimonios y eventos corporativos. Incluye accesos, climatización y servicios básicos.',
+      'Salón Bar': 'Ambiente contemporáneo con barra integrada, iluminación escénica y sistema de sonido premium. Recomendada para cocteles, lanzamientos y fiestas privadas.',
+      'Salón Empresarial': 'Equipado con pantallas, streaming, mobiliario modular y conectividad para eventos corporativos, conferencias y workshops.',
+      'Terraza': 'Espacio al aire libre con pérgolas y vistas; ideal para eventos sunset, bodas y recepciones. Puede requerir montaje adicional según la ocasión.',
+      'Kiosco': 'Área semiabierta rodeada de jardines, perfecta para reuniones familiares y celebraciones pequeñas.',
+      'Salón Presidente': 'Espacio exclusivo con mobiliario ejecutivo, insonorización y servicio gourmet para reuniones privadas y eventos corporativos de alto nivel.'
+    }
+
+    // If a salon is provided as query param, preselect it and trigger change
+    try {
+      const params = new URLSearchParams(location.search)
+      const salonParam = params.get('salon')
+      if (salonParam) {
+        const match = Array.from(salonSelect.options).find((o) => o.value === salonParam)
+        if (match) {
+          salonSelect.value = salonParam
+          salonSelect.dispatchEvent(new Event('change', { bubbles: true }))
+        }
+      }
+    } catch (err) {
+      // ignore if location is not available (SSR) or any other issue
+    }
+
+    salonSelect.addEventListener('change', (e) => {
+      const opt = e.target.selectedOptions[0]
+      const imgSrc = opt.dataset.img
+      const name = opt.value
+      img.src = imgSrc
+      title.textContent = name
+      desc.textContent = descriptions[name] || opt.dataset.desc || ''
+      // update generic features (could be expanded per-salon)
+      const features = {
+        'Mi Llanura': ['Capacidad: hasta 180 personas','Climatización','Acceso proveedores','Espacio para pista de baile'],
+        'Salón Bar': ['Capacidad: hasta 90 personas','Bar equipado','Iluminación escénica','Sonido integrado'],
+        'Salón Empresarial': ['Hasta 120 personas','Streaming','Pantallas y proyector','WiFi'],
+        'Terraza': ['Hasta 150 personas','Al aire libre','Iluminación ambiental','Pérgolas'],
+        'Kiosco': ['Hasta 70 personas','Semiabierto','Acceso a jardín'],
+        'Salón Presidente': ['Hasta 60 personas','Insonorización','Servicio gourmet']
+      }
+      featuresList.innerHTML = ''
+      (features[name] || []).forEach(f => {
+        const li = document.createElement('li')
+        li.textContent = f
+        featuresList.appendChild(li)
+      })
+    })
+
+    const form = document.getElementById('cotizacion-form')
+    const summary = document.getElementById('summary')
+    const summaryContent = document.getElementById('summary-content')
+    const mailtoLink = document.getElementById('mailto-link')
+    const resetBtn = document.getElementById('reset-btn')
+
+    resetBtn.addEventListener('click', () => { form.reset(); summary.hidden = true })
+
+    form.addEventListener('submit', (e) => {
+      e.preventDefault()
+      const data = new FormData(form)
+      const values = Object.fromEntries(data.entries())
+      // features can be multiple
+      const features = Array.from(form.querySelectorAll('input[name="features"]:checked')).map(i => i.value)
+      values.features = features
+
+      const needChairs = form.querySelector('#need-chairs').checked
+      values.needChairs = needChairs
+      values.chairsCount = form.querySelector('#chairs-count').value || '0'
+
+      // basic validation
+      if (!values.salon || !values.date || !values.time || !values.name || !values.email) {
+        alert('Por favor completa los campos requeridos: salón, fecha, hora, nombre y email.')
+        return
+      }
+
+      // build summary
+      const summaryText = `Salón: ${values.salon}\nFecha: ${values.date}\nHora inicio: ${values.time}\nDuración (h): ${values.duration}\nAsistentes estimados: ${values.guests}\nPrestaciones: ${values.features.join(', ') || 'Ninguna'}\nRequiere sillas: ${values.needChairs ? 'Sí' : 'No'}\nNúmero de sillas: ${values.chairsCount}\nNombre: ${values.name}\nEmail: ${values.email}\nTeléfono: ${values.phone || '-'}\nObservaciones: ${values.notes || '-'}\n`
+
+      summaryContent.textContent = summaryText
+      summary.hidden = false
+
+      // mailto link (subject + body)
+      const subject = encodeURIComponent(`Solicitud de cotización - ${values.salon} - ${values.date}`)
+      const body = encodeURIComponent(summaryText)
+      mailtoLink.href = `mailto:comunicaciones@clubelmeta.com?subject=${subject}&body=${body}`
+      mailtoLink.textContent = 'Enviar solicitud por correo a comunicaciones@clubelmeta.com'
+    })
+  </script>
+
+</BaseLayout>
