@@ -27,7 +27,7 @@ const descriptions = {
 }
 
 // Datos estáticos de fallback (solo se usan si falla el backend)
-let espacios = [
+const espacios = [
   {
     nombre: 'MI LLANURA',
     descripcion: descriptions['MI LLANURA'],
@@ -129,30 +129,34 @@ let espacios = [
           const grid = document.getElementById('espacios-grid');
           if (!grid) return;
           
-          grid.innerHTML = result.data.map(espacio => {
-            const imagen = imageMap[espacio.nombre] || '/src/assets/millanura.jpg';
-            const descripcion = descriptions[espacio.nombre] || 'Espacio exclusivo para eventos especiales.';
-            const aforo = `Hasta ${espacio.capacidadMaxima} personas`;
-            
-            return `
-              <article class="reserva-card" role="listitem" style="background-image: url(${imagen})">
-                <div class="reserva-card__overlay">
-                  <header class="reserva-card__header">
-                    <span class="reserva-card__badge">${aforo}</span>
-                    <h2>${espacio.nombre}</h2>
-                  </header>
-                  <p>${descripcion}</p>
-                  <a
-                    class="cotizar-btn"
-                    href="/obtener-cotizacion?salon=${encodeURIComponent(espacio.nombre)}"
-                    aria-label="Obtener cotización - ${espacio.nombre}"
-                  >
-                    Obten cotizacion
-                  </a>
-                </div>
-              </article>
-            `;
-          }).join('');
+          // En lugar de reemplazar innerHTML, actualizamos los datos sin perder la estructura CSS
+          const cards = grid.querySelectorAll('.reserva-card');
+          
+          result.data.forEach((espacio, index) => {
+            const card = cards[index];
+            if (card) {
+              const imagen = imageMap[espacio.nombre] || '/src/assets/millanura.jpg';
+              const descripcion = descriptions[espacio.nombre] || 'Espacio exclusivo para eventos especiales.';
+              const aforo = `Hasta ${espacio.capacidadMaxima} personas`;
+              
+              // Actualizar atributos sin perder clases y estilos
+              card.style.backgroundImage = `url(${imagen})`;
+              
+              const badge = card.querySelector('.reserva-card__badge');
+              const title = card.querySelector('h2');
+              const desc = card.querySelector('p');
+              const link = card.querySelector('.cotizar-btn');
+              
+              if (badge) badge.textContent = aforo;
+              if (title) title.textContent = espacio.nombre;
+              if (desc) desc.textContent = descripcion;
+              if (link) {
+                link.href = `/obtener-cotizacion?salon=${encodeURIComponent(espacio.nombre)}`;
+                link.setAttribute('aria-label', `Obtener cotización - ${espacio.nombre}`);
+                link.textContent = 'Obten cotizacion';
+              }
+            }
+          });
         }
       } catch (error) {
         console.error('Error cargando espacios desde backend:', error);
@@ -239,8 +243,8 @@ let espacios = [
         rgba(0, 0, 0, 0.5) 40%,
         rgba(0, 0, 0, 0.75) 100%
       );
-  padding: 2.5rem 2rem;
-  position: relative;
+      padding: 2.5rem 2rem;
+      position: relative;
       display: flex;
       flex-direction: column;
       gap: 1.1rem;
@@ -320,7 +324,7 @@ let espacios = [
     .reserva-card .cotizar-btn {
       display: inline-flex;
       text-decoration: none;
-      padding: 0.7rem 2rem; /* pill like in the screenshot */
+      padding: 0.7rem 2rem;
       border-radius: 999px;
       background: #0a4ba5;
       color: #ffffff;
