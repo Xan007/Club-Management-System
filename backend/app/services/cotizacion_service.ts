@@ -63,10 +63,13 @@ export class CotizacionService {
       const diaEval = new Date(`${fecha}T00:00:00`)
       const diaSemana = diaEval.getDay()
 
+      console.log('Validando disponibilidad:', { espacioId, fecha, horaInicio, duracion, tipoEvento, diaSemana })
+
       // 1. Validar horario de operación
       const horario = await HorarioOperacion.findBy('dia_semana', diaSemana)
       if (!horario || !horario.estaActivo) {
         const diasSemana = ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado']
+        console.log(`Club cerrado: ${diasSemana[diaSemana]}`)
         return {
           disponible: false,
           mensaje: `El club no abre los ${diasSemana[diaSemana]}`,
@@ -75,6 +78,7 @@ export class CotizacionService {
 
       // 2. Validar duración mínima y máxima
       if (duracion < 4 || duracion > 8) {
+        console.log(`Duración inválida: ${duracion}`)
         return {
           disponible: false,
           mensaje: `La duración debe ser entre 4 y 8 horas (ingresaste ${duracion} horas). Las horas adicionales se cobran por separado`,
@@ -178,6 +182,12 @@ export class CotizacionService {
       // Calcular hora de fin legible
       const horaFinFormato = this.minutosAHora(minutosFin).split(':').slice(0, 2).join(':')
 
+      console.log('Disponibilidad validada exitosamente:', {
+        disponible: true,
+        horaInicio,
+        horaFin: horaFinFormato,
+      })
+      
       return {
         disponible: true,
         mensaje: `Disponible de ${horaInicio} a ${horaFinFormato}${eventoFinalPasaMedianoche ? ' (día siguiente)' : ''}`,
@@ -294,6 +304,8 @@ export class CotizacionService {
    * Crear cotización completa
    */
   static async crearCotizacion(solicitud: SolicitudCotizacion): Promise<ResultadoCotizacion> {
+    console.log('=== CREAR COTIZACIÓN ===', solicitud)
+    
     // Validar disponibilidad
     const validacion = await this.validarDisponibilidad(
       solicitud.espacioId,
@@ -302,6 +314,8 @@ export class CotizacionService {
       solicitud.duracion,
       solicitud.tipoEvento
     )
+    
+    console.log('Validación disponibilidad:', validacion)
 
     // Si no hay disponibilidad, crear cotización pero sin calcular detalles
     if (!validacion.disponible) {
@@ -356,7 +370,10 @@ export class CotizacionService {
 
     // Calcular detalles
     const detalles = await this.calcularCotizacion(solicitud)
+    console.log('Detalles calculados:', detalles)
+    
     const valorTotal = detalles.reduce((sum, d) => sum + d.total, 0)
+    console.log('Valor Total calculado:', valorTotal)
 
     // Determinar si aplica recargo nocturno
     const minutosInicio = this.horaAMinutos(solicitud.horaInicio)

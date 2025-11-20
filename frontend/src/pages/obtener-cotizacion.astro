@@ -182,15 +182,16 @@ const espacios = [
         </div>
 
         <!-- Mensaje de Error -->
-        <div id="error-message" class="message error-message" hidden>
-          <div class="message-header">
-            <h3>⚠ Oops, Algo Salió Mal</h3>
-          </div>
-          <div class="message-content">
-            <p id="error-text"></p>
-          </div>
-          <div class="message-actions">
-            <button type="button" id="retry-btn" class="btn-secondary">Intentar Nuevamente</button>
+        <div id="error-message" class="modal-error" hidden>
+          <div class="modal-error__overlay"></div>
+          <div class="modal-error__content">
+            <button type="button" id="close-error-btn" class="modal-error__close" aria-label="Cerrar">✕</button>
+            <div class="modal-error__icon">⚠</div>
+            <h2 class="modal-error__title">Algo Salió Mal</h2>
+            <p class="modal-error__message" id="error-text"></p>
+            <div class="modal-error__actions">
+              <button type="button" id="retry-btn" class="btn-primary">Intentar Nuevamente</button>
+            </div>
           </div>
         </div>
       </main>
@@ -461,6 +462,143 @@ const espacios = [
       color: #047857;
     }
 
+    /* MODAL DE ERROR - PANTALLA COMPLETA */
+    .modal-error {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      z-index: 9999;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .modal-error__overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.6);
+      backdrop-filter: blur(5px);
+    }
+
+    .modal-error__content {
+      position: relative;
+      background: white;
+      border-radius: 16px;
+      padding: 2.5rem 2.5rem;
+      max-width: 480px;
+      width: 90%;
+      box-shadow: 0 25px 50px rgba(0, 0, 0, 0.35);
+      animation: slideIn 0.3s ease-out;
+      text-align: center;
+      border: 2px solid #fecaca;
+    }
+
+    @keyframes slideIn {
+      from {
+        opacity: 0;
+        transform: translateY(-30px) scale(0.95);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+      }
+    }
+
+    .modal-error__close {
+      position: absolute;
+      top: 1.2rem;
+      right: 1.2rem;
+      background: #fee2e2;
+      border: none;
+      font-size: 1.5rem;
+      cursor: pointer;
+      color: #991b1b;
+      padding: 0.5rem 0.75rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 6px;
+      transition: all 0.2s;
+      width: 36px;
+      height: 36px;
+    }
+
+    .modal-error__close:hover {
+      background: #fca5a5;
+      color: #7f1d1d;
+      transform: scale(1.1);
+    }
+
+    .modal-error__icon {
+      font-size: 3.5rem;
+      margin-bottom: 1rem;
+      display: inline-block;
+      animation: pulse 0.5s ease-out;
+    }
+
+    @keyframes pulse {
+      0% {
+        transform: scale(0.8);
+        opacity: 0;
+      }
+      100% {
+        transform: scale(1);
+        opacity: 1;
+      }
+    }
+
+    .modal-error__title {
+      font-size: 1.6rem;
+      font-weight: 800;
+      color: #991b1b;
+      margin: 0 0 0.75rem;
+      letter-spacing: -0.5px;
+    }
+
+    .modal-error__message {
+      font-size: 0.95rem;
+      color: #7f1d1d;
+      margin: 0 0 2rem;
+      line-height: 1.6;
+      word-wrap: break-word;
+    }
+
+    .modal-error__actions {
+      display: flex;
+      gap: 0.75rem;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    .modal-error__actions .btn-primary {
+      background: linear-gradient(135deg, #dc2626 0%, #991b1b 100%);
+      color: white;
+      padding: 0.85rem 2.2rem;
+      border-radius: 8px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.3s;
+      border: none;
+      font-size: 0.95rem;
+      box-shadow: 0 4px 12px rgba(220, 38, 38, 0.3);
+    }
+
+    .modal-error__actions .btn-primary:hover {
+      background: linear-gradient(135deg, #b91c1c 0%, #7f1d1d 100%);
+      box-shadow: 0 8px 20px rgba(220, 38, 38, 0.4);
+      transform: translateY(-2px);
+    }
+
+    .modal-error__actions .btn-primary:active {
+      transform: translateY(0);
+      box-shadow: 0 2px 8px rgba(220, 38, 38, 0.3);
+    }
+
     .error-message {
       background: #fef2f2;
       border-color: #fca5a5;
@@ -596,7 +734,7 @@ const espacios = [
     // CARGAR SERVICIOS
     async function cargarServicios() {
       try {
-        const response = await fetch(`${API_URL}/api/servicios-adicionales`)
+        const response = await fetch(`${API_URL}/api/prestaciones`)
         const result = await response.json()
         
         if (result.success && result.data) {
@@ -616,12 +754,12 @@ const espacios = [
     }
 
     // CARGAR TARIFAS DEL SALÓN
-    async function cargarTarifas(nombreSalon) {
+    async function cargarTarifas(espacioId) {
       try {
         precio4hInfo.textContent = '4 horas: Cargando...'
         precio8hInfo.textContent = '8 horas: Cargando...'
         
-        const response = await fetch(`${API_URL}/api/espacios/${encodeURIComponent(nombreSalon)}/tarifas`)
+        const response = await fetch(`${API_URL}/api/espacios/${espacioId}/tarifas`)
         const data = await response.json()
         
         if (data.success) {
@@ -657,7 +795,7 @@ const espacios = [
         cargarDisposicionesDelEspacio(salonData.id)
         
         // Cargar tarifas del nuevo salón
-        cargarTarifas(salonData.nombre)
+        cargarTarifas(salonData.id)
       } catch (error) {
         console.error('Error al cambiar salón:', error)
       }
@@ -736,6 +874,13 @@ const espacios = [
         const result = await response.json()
 
         if (result.success && result.data) {
+          // Verificar si hay disponibilidad
+          if (!result.data.disponible) {
+            document.getElementById('error-text').textContent = `No hay disponibilidad: ${result.data.mensajeDisponibilidad || 'Fecha/hora no disponible'}`
+            errorMessage.hidden = false
+            return
+          }
+          
           currentCotizacionId = result.data.cotizacion.id
           document.getElementById('cotizacion-numero').textContent = `#${result.data.cotizacion.cotizacionNumero}`
           document.getElementById('cotizacion-total').textContent = `$${result.data.cotizacion.valorTotal.toLocaleString('es-CO')}`
@@ -783,14 +928,29 @@ const espacios = [
       window.scrollTo({ top: 0, behavior: 'smooth' })
     })
 
+    // BOTONES DE ERROR MODAL
+    document.getElementById('close-error-btn')?.addEventListener('click', () => {
+      errorMessage.hidden = true
+    })
+
     document.getElementById('retry-btn')?.addEventListener('click', () => {
       errorMessage.hidden = true
     })
 
+    // Cerrar modal al hacer clic en el overlay
+    const errorModal = document.getElementById('error-message')
+    if (errorModal) {
+      errorModal.addEventListener('click', (e) => {
+        if (e.target === errorModal || e.target.classList.contains('modal-error__overlay')) {
+          errorModal.hidden = true
+        }
+      })
+    }
+
     // INICIALIZAR
     console.log('Iniciando...')
     cargarServicios()
-    cargarTarifas('MI LLANURA')
+    cargarTarifas(1)
     cargarDisposicionesDelEspacio(1)
   </script>
 

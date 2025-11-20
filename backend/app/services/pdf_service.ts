@@ -4,11 +4,42 @@ import Disposicion from '#models/disposicion'
 import { readFileSync } from 'fs'
 import { fileURLToPath } from 'url'
 import { dirname, join } from 'path'
+import puppeteer from 'puppeteer'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = dirname(__filename)
 
 export class PDFService {
+  /**
+   * Generar PDF desde HTML usando Puppeteer
+   */
+  static async generarPDF(cotizacion: Cotizacion): Promise<Buffer> {
+    const htmlContent = await this.generarCotizacionHTML(cotizacion)
+
+    try {
+      const browser = await puppeteer.launch({
+        headless: 'new',
+        args: ['--no-sandbox', '--disable-setuid-sandbox'],
+      })
+
+      const page = await browser.newPage()
+      await page.setContent(htmlContent, { waitUntil: 'networkidle0' })
+
+      const pdfBuffer = await page.pdf({
+        format: 'A4',
+        margin: { top: 10, right: 10, bottom: 10, left: 10 },
+        printBackground: true,
+      })
+
+      await browser.close()
+
+      return pdfBuffer
+    } catch (error) {
+      console.error('Error generando PDF con Puppeteer:', error)
+      throw new Error('Error al generar el PDF')
+    }
+  }
+
   /**
    * Generar HTML de cotización desde plantilla
    */

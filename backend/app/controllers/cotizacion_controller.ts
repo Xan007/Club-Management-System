@@ -84,6 +84,14 @@ export default class CotizacionController {
 
       const resultado = await CotizacionService.crearCotizacion(solicitud)
 
+      console.log('Resultado cotización:', {
+        disponible: resultado.disponible,
+        valorTotal: resultado.cotizacion.valorTotal,
+        montoAbono: resultado.montoAbono,
+        detallesCount: resultado.detalles.length,
+        mensaje: resultado.mensajeDisponibilidad,
+      })
+
       return response.status(201).json({
         success: true,
         message: 'Cotización creada exitosamente',
@@ -278,21 +286,21 @@ export default class CotizacionController {
   }
 
   /**
-   * Descargar cotización en HTML/PDF
+   * Descargar cotización en PDF
    */
   async descargarPDF({ params, response }: HttpContext) {
     try {
       const cotizacion = await Cotizacion.findOrFail(params.id)
 
-      const htmlContent = await PDFService.generarCotizacionHTML(cotizacion)
+      const pdfBuffer = await PDFService.generarPDF(cotizacion)
 
-      response.header('Content-Type', 'text/html; charset=utf-8')
+      response.header('Content-Type', 'application/pdf')
       response.header(
         'Content-Disposition',
-        `inline; filename="Cotizacion-${cotizacion.cotizacionNumero}.html"`
+        `inline; filename="Cotizacion-${cotizacion.cotizacionNumero}.pdf"`
       )
 
-      return response.send(htmlContent)
+      return response.send(pdfBuffer)
     } catch (error) {
       return response.status(500).json({
         success: false,

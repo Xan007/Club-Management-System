@@ -75,10 +75,12 @@ router.get('/api/socios/buscar', [SociosController, 'buscarPublico'])
 const EspacioController = () => import('#controllers/espacio_controller')
 router.get('/api/espacios', [EspacioController, 'index'])
 router.get('/api/espacios/simplificado', [EspacioController, 'listarSimplificado'])
-router.get('/api/espacios/:id', [EspacioController, 'show'])
+router.get('/api/espacios/:espacioId/tarifas', [EspacioController, 'obtenerTarifasEspacio'])
 router.get('/api/espacios/:espacioId/configuraciones', [EspacioController, 'obtenerConfiguracionesEspacio'])
+router.get('/api/espacios/:id', [EspacioController, 'show'])
 router.get('/api/disposiciones', [EspacioController, 'listarDisposiciones'])
 router.get('/api/prestaciones', [EspacioController, 'listarPrestaciones'])
+router.get('/api/servicios-adicionales', [EspacioController, 'listarPrestaciones'])
 
 // --- API Docs ---
 // Sirve el OpenAPI spec en JSON generado desde archivos "solo-docs"

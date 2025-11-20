@@ -1,5 +1,6 @@
 import type { HttpContext } from '@adonisjs/core/http'
 import db from '@adonisjs/lucid/services/db'
+import ServicioAdicional from '#models/servicio_adicional'
 
 export default class EspacioController {
   /**
@@ -157,21 +158,68 @@ export default class EspacioController {
   }
 
   /**
+   * Obtener tarifas de un espacio específico
+   */
+  async obtenerTarifasEspacio({ params, response }: HttpContext) {
+    try {
+      const espacioId = parseInt(params.espacioId)
+
+      // Buscar la primera configuración del espacio para obtener su tarifa
+      const configuracion = await db
+        .from('configuraciones_espacio')
+        .where('espacio_id', espacioId)
+        .first()
+
+      if (!configuracion) {
+        return response.status(404).json({
+          success: false,
+          message: 'No hay configuración para este espacio',
+        })
+      }
+
+      // Obtener la tarifa para cliente particular
+      const tarifa = await db
+        .from('tarifas')
+        .where('configuracion_espacio_id', configuracion.id)
+        .where('tipo_cliente', 'particular')
+        .first()
+
+      if (!tarifa) {
+        return response.json({
+          success: true,
+          data: {
+            precio4Horas: null,
+            precio8Horas: null,
+          },
+        })
+      }
+
+      return response.json({
+        success: true,
+        data: {
+          precio4Horas: tarifa.precio_4_horas ? parseFloat(tarifa.precio_4_horas) : null,
+          precio8Horas: tarifa.precio_8_horas ? parseFloat(tarifa.precio_8_horas) : null,
+        },
+      })
+    } catch (error) {
+      console.error('Error al obtener tarifas:', error)
+      return response.status(500).json({
+        success: false,
+        message: 'Error al obtener tarifas',
+        error: error instanceof Error ? error.message : 'Unknown error',
+      })
+    }
+  }
+
+  /**
    * Listar prestaciones disponibles (servicios adicionales)
    */
   async listarPrestaciones({ response }: HttpContext) {
     try {
-      const prestaciones = [
-        { id: 1, nombre: 'Sillas', precio: 50000 },
-        { id: 2, nombre: 'Mesas', precio: 80000 },
-        { id: 3, nombre: 'Sonido', precio: 100000 },
-        { id: 4, nombre: 'Iluminación', precio: 60000 },
-        { id: 5, nombre: 'Proyector / Pantalla', precio: 100000 },
-        { id: 6, nombre: 'WiFi', precio: 30000 },
-        { id: 7, nombre: 'Catering', precio: 150000 },
-        { id: 8, nombre: 'Personal de apoyo', precio: 100000 },
-        { id: 9, nombre: 'Estacionamiento', precio: 20000 },
-      ]
+      const prestaciones = await ServicioAdicional.query()
+        .where('tipo_cliente', 'particular')
+        .where('activo', true)
+        .select('id', 'nombre', 'precio')
 
       return response.json({
         success: true,
