@@ -1,59 +1,41 @@
 import type { HttpContext } from '@adonisjs/core/http'
 import Cotizacion from '#models/cotizacion'
 import { PDFService } from '#services/pdf_service'
+import { CotizacionService, type SolicitudCotizacion } from '#services/cotizacion_service'
 import vine from '@vinejs/vine'
-import db from '@adonisjs/lucid/services/db'
 
 export default class CotizacionController {
   /**
-   * Obtener tarifas de un espacio
+   * Obtener disponibilidad de fechas para un espacio
    */
-  async obtenerTarifas({ params, response }: HttpContext) {
+  async obtenerDisponibilidad({ request, response }: HttpContext) {
+    const query = request.qs()
     try {
-      const espacio = await db
-        .from('espacios')
-        .where('nombre', params.nombre.toUpperCase())
-        .first()
+      const { espacioId, fecha, duracion, tipoEvento } = query
 
-      if (!espacio) {
-        return response.status(404).json({
+      if (!espacioId || !fecha || !duracion || !tipoEvento) {
+        return response.status(400).json({
           success: false,
-          message: 'Espacio no encontrado',
+          message: 'Faltan parámetros: espacioId, fecha, duracion, tipoEvento',
         })
       }
 
-      const configuracion = await db
-        .from('configuraciones_espacio')
-        .where('espacio_id', espacio.id)
-        .first()
-
-      if (!configuracion) {
-        return response.status(404).json({
-          success: false,
-          message: 'Configuración no encontrada',
-        })
-      }
-
-      const tarifa = await db
-        .from('tarifas')
-        .where('configuracion_espacio_id', configuracion.id)
-        .where('tipo_cliente', 'particular')
-        .first()
+      const validacion = await CotizacionService.validarDisponibilidad(
+        parseInt(espacioId),
+        fecha,
+        query.horaInicio || '08:00',
+        parseInt(duracion),
+        tipoEvento
+      )
 
       return response.json({
         success: true,
-        data: {
-          espacio: espacio.nombre,
-          capacidad: configuracion.capacidad,
-          precio4Horas: tarifa?.precio_4_horas ? parseFloat(tarifa.precio_4_horas) : null,
-          precio8Horas: tarifa?.precio_8_horas ? parseFloat(tarifa.precio_8_horas) : null,
-        },
+        data: validacion,
       })
     } catch (error) {
-      console.error('Error obteniendo tarifas:', error)
       return response.status(500).json({
         success: false,
-        message: 'Error al obtener tarifas',
+        message: 'Error al verificar disponibilidad',
         error: error.message,
       })
     }
@@ -62,65 +44,56 @@ export default class CotizacionController {
   /**
    * Crear una nueva cotización
    */
-  async store({ request, response }: HttpContext) {
+  async crearCotizacion({ request, response }: HttpContext) {
     try {
-      // Validación del request
       const schema = vine.object({
-        salon: vine.string().trim().minLength(1),
-        fecha: vine.string().trim().minLength(1),
-        hora: vine.string().trim().minLength(1),
-        duracion: vine.number().min(1),
+        espacioId: vine.number(),
+        configuracionEspacioId: vine.number(),
+        fecha: vine.string().regex(/^\d{4}-\d{2}-\d{2}$/), // YYYY-MM-DD
+        horaInicio: vine.string().regex(/^\d{2}:\d{2}$/), // HH:mm
+        duracion: vine.number().min(4).max(8), // Máximo 8 horas (base), horas adicionales se cobran aparte
+        tipoEvento: vine.enum(['social', 'empresarial', 'capacitacion']),
         asistentes: vine.number().min(1),
-        prestaciones: vine.array(vine.string()),
-        requiereSillas: vine.boolean(),
-        numeroSillas: vine.number().min(0),
-        nombre: vine.string().trim().minLength(1),
-        email: vine.string().email().trim(),
+        tipoCliente: vine.enum(['socio', 'particular']),
+        codigoSocio: vine.string().optional(), // Código del socio para descuentos
+        servicios: vine.array(vine.number()).optional(),
+        nombre: vine.string().trim().minLength(3),
+        email: vine.string().email(),
         telefono: vine.string().trim().optional(),
         observaciones: vine.string().trim().optional(),
       })
 
       const data = await vine.validate({ schema, data: request.all() })
 
-      console.log('Datos recibidos:', data)
-
-      // Generar número de cotización (formato 0926, etc)
-      const lastCotizacion = await Cotizacion.query().orderBy('id', 'desc').first()
-      const nextNumber = lastCotizacion ? parseInt(lastCotizacion.cotizacionNumero) + 1 : 926
-      const cotizacionNumero = nextNumber.toString().padStart(4, '0')
-
-      console.log('Número de cotización:', cotizacionNumero)
-
-      // Calcular detalles y total
-      const detalles = await this.calcularDetalles(data)
-      const valorTotal = detalles.reduce((sum, item) => sum + item.total, 0)
-
-      console.log('Detalles calculados:', detalles)
-      console.log('Valor total:', valorTotal)
-
-      // Crear cotización
-      const cotizacion = await Cotizacion.create({
-        salon: data.salon,
+      // Crear cotización directamente (sin validar socio, ya que todos tienen mismo precio)
+      const solicitud: SolicitudCotizacion = {
+        espacioId: data.espacioId,
+        configuracionEspacioId: data.configuracionEspacioId,
         fecha: data.fecha,
-        hora: data.hora,
+        horaInicio: data.horaInicio,
         duracion: data.duracion,
+        tipoEvento: data.tipoEvento,
         asistentes: data.asistentes,
-        prestaciones: JSON.stringify(data.prestaciones),
-        requiereSillas: data.requiereSillas,
-        numeroSillas: data.numeroSillas,
+        tipoCliente: data.tipoCliente,
+        servicios: data.servicios || [],
         nombre: data.nombre,
         email: data.email,
-        telefono: data.telefono || null,
-        observaciones: data.observaciones || null,
-        cotizacionNumero,
-        valorTotal,
-        detalles: JSON.stringify(detalles),
-      })
+        telefono: data.telefono,
+        observaciones: data.observaciones,
+      }
+
+      const resultado = await CotizacionService.crearCotizacion(solicitud)
 
       return response.status(201).json({
         success: true,
         message: 'Cotización creada exitosamente',
-        data: cotizacion,
+        data: {
+          cotizacion: resultado.cotizacion,
+          detalles: resultado.detalles,
+          montoAbono: resultado.montoAbono,
+          disponible: resultado.disponible,
+          mensajeDisponibilidad: resultado.mensajeDisponibilidad,
+        },
       })
     } catch (error) {
       console.error('Error creando cotización:', error)
@@ -133,131 +106,199 @@ export default class CotizacionController {
   }
 
   /**
-   * Descargar cotización en PDF
+   * Listar cotizaciones (admin: todas, usuario: propias)
    */
-  async downloadPdf({ params, response }: HttpContext) {
+  async listarCotizaciones({ request, response }: HttpContext) {
     try {
-      const cotizacion = await Cotizacion.findOrFail(params.id)
+      const { estado, email, fecha_desde, fecha_hasta } = request.qs()
+      let query = Cotizacion.query()
 
-      const pdfBuffer = await PDFService.generarCotizacionPDF(cotizacion)
+      if (email) {
+        query = query.where('email', email)
+      }
 
-      response.header('Content-Type', 'application/pdf')
-      response.header(
-        'Content-Disposition',
-        `attachment; filename="Cotizacion-${cotizacion.cotizacionNumero}.pdf"`
-      )
+      if (estado) {
+        query = query.where('estado', estado)
+      }
 
-      return response.send(pdfBuffer)
+      if (fecha_desde) {
+        query = query.whereRaw('DATE(fecha) >= ?', [fecha_desde])
+      }
+
+      if (fecha_hasta) {
+        query = query.whereRaw('DATE(fecha) <= ?', [fecha_hasta])
+      }
+
+      const cotizaciones = await query.orderBy('created_at', 'desc').limit(100)
+
+      return response.json({
+        success: true,
+        data: cotizaciones.map((c) => ({
+          id: c.id,
+          numero: c.cotizacionNumero,
+          cliente: c.nombre,
+          email: c.email,
+          fecha_evento: c.fecha,
+          tipo_evento: c.tipoEvento,
+          asistentes: c.asistentes,
+          total: c.valorTotal,
+          estado: c.estadoLegible,
+          estado_pago: c.estadoPagoLegible,
+          creado: c.createdAt,
+        })),
+      })
     } catch (error) {
-      console.error('Error generando PDF:', error)
       return response.status(500).json({
         success: false,
-        message: 'Error al generar el PDF',
+        message: 'Error al listar cotizaciones',
         error: error.message,
       })
     }
   }
 
   /**
-   * Calcular detalles de la cotización con precios
+   * Obtener detalle de una cotización
    */
-  private async calcularDetalles(data: any) {
-    const detalles: Array<{
-      servicio: string
-      cantidad: number
-      valorUnitario: number
-      total: number
-    }> = []
+  async mostrarCotizacion({ params, response }: HttpContext) {
+    try {
+      const cotizacion = await Cotizacion.findOrFail(params.id)
 
-    // Obtener tarifa del espacio desde la base de datos
-    const espacio = await db
-      .from('espacios')
-      .where('nombre', data.salon.toUpperCase())
-      .first()
+      return response.json({
+        success: true,
+        data: {
+          id: cotizacion.id,
+          numero: cotizacion.cotizacionNumero,
+          cliente: {
+            nombre: cotizacion.nombre,
+            email: cotizacion.email,
+            telefono: cotizacion.telefono,
+          },
+          evento: {
+            fecha: cotizacion.fecha,
+            hora: cotizacion.hora,
+            duracion: cotizacion.duracion,
+            asistentes: cotizacion.asistentes,
+            tipo: cotizacion.tipoEvento,
+          },
+          detalles: cotizacion.getDetalles(),
+          totales: {
+            subtotal: cotizacion.valorTotal,
+            abono_50_porciento: cotizacion.calcularMontoAbono(),
+          },
+          estado: cotizacion.estadoLegible,
+          estado_pago: cotizacion.estadoPagoLegible,
+          creado: cotizacion.createdAt,
+          observaciones: cotizacion.observaciones,
+        },
+      })
+    } catch (error) {
+      return response.status(404).json({
+        success: false,
+        message: 'Cotización no encontrada',
+      })
+    }
+  }
 
-    let precioBase = 1500000 // Precio por defecto
+  /**
+   * Confirmar cotización (cambiar estado a aceptada)
+   */
+  async confirmarCotizacion({ params, response }: HttpContext) {
+    try {
+      const cotizacion = await Cotizacion.findOrFail(params.id)
 
-    if (espacio) {
-      const configuracion = await db
-        .from('configuraciones_espacio')
-        .where('espacio_id', espacio.id)
-        .first()
-
-      if (configuracion) {
-        const tarifa = await db
-          .from('tarifas')
-          .where('configuracion_espacio_id', configuracion.id)
-          .where('tipo_cliente', 'particular')
-          .first()
-
-        if (tarifa) {
-          // Usar precio según duración (4 horas o 8 horas)
-          if (data.duracion <= 4 && tarifa.precio_4_horas) {
-            precioBase = parseFloat(tarifa.precio_4_horas)
-          } else if (tarifa.precio_8_horas) {
-            precioBase = parseFloat(tarifa.precio_8_horas)
-          }
-        }
+      if (cotizacion.estado === 'aceptada') {
+        return response.status(400).json({
+          success: false,
+          message: 'La cotización ya ha sido confirmada',
+        })
       }
-    }
 
-    // Agregar salón
-    detalles.push({
-      servicio: `Alquiler de Salón ${data.salon}`,
-      cantidad: 1,
-      valorUnitario: precioBase,
-      total: precioBase,
-    })
+      await CotizacionService.confirmarCotizacion(cotizacion.id)
+      await cotizacion.refresh()
 
-    // Precios de prestaciones (ejemplo)
-    const preciosPrestaciones: Record<string, number> = {
-      Sillas: 50000,
-      Mesas: 80000,
-      Sonido: 100000,
-      Iluminación: 60000,
-      'Proyector / Pantalla': 100000,
-      WiFi: 30000,
-      Catering: 150000,
-      'Personal de apoyo': 100000,
-      Estacionamiento: 20000,
-    }
-
-    // Agregar prestaciones
-    data.prestaciones.forEach((prestacion: string) => {
-      const precio = preciosPrestaciones[prestacion] || 50000
-      detalles.push({
-        servicio: prestacion,
-        cantidad: 1,
-        valorUnitario: precio,
-        total: precio,
+      return response.json({
+        success: true,
+        message: 'Cotización confirmada exitosamente',
+        data: cotizacion,
       })
-    })
-
-    // Agregar sillas adicionales si las requiere
-    if (data.requiereSillas && data.numeroSillas > 0) {
-      const precioSilla = 5000
-      detalles.push({
-        servicio: 'Sillas adicionales',
-        cantidad: data.numeroSillas,
-        valorUnitario: precioSilla,
-        total: precioSilla * data.numeroSillas,
+    } catch (error) {
+      return response.status(400).json({
+        success: false,
+        message: 'Error al confirmar la cotización',
+        error: error.message,
       })
     }
+  }
 
-    // Agregar cargo por número de horas si excede 4 horas
-    if (data.duracion > 4 && data.duracion <= 8) {
-      // Ya incluido en precio_8_horas, no agregar extra
-    } else if (data.duracion > 8) {
-      const horasAdicionales = data.duracion - 8
-      const precioPorHora = 50000
-      detalles.push({
-        servicio: 'Horas adicionales',
-        cantidad: horasAdicionales,
-        valorUnitario: precioPorHora,
-        total: precioPorHora * horasAdicionales,
+  /**
+   * Registrar pago de cotización
+   */
+  async registrarPago({ params, request, response }: HttpContext) {
+    try {
+      const { monto, tipo_pago } = request.all()
+
+      if (!monto || !tipo_pago) {
+        return response.status(400).json({
+          success: false,
+          message: 'Faltan parámetros: monto, tipo_pago',
+        })
+      }
+
+      const cotizacion = await Cotizacion.findOrFail(params.id)
+      const montoPagado = parseFloat(monto)
+      const totalPagado = (parseFloat(cotizacion.montoPagado.toString()) || 0) + montoPagado
+
+      // Actualizar estado de pago
+      cotizacion.montoPagado = totalPagado
+      const total = parseFloat(cotizacion.valorTotal.toString())
+
+      if (totalPagado >= total) {
+        cotizacion.estadoPago = 'pagado'
+      } else if (totalPagado >= cotizacion.calcularMontoAbono()) {
+        cotizacion.estadoPago = 'abonado'
+      }
+
+      await cotizacion.save()
+
+      return response.json({
+        success: true,
+        message: 'Pago registrado exitosamente',
+        data: {
+          monto_pagado: cotizacion.montoPagado,
+          estado_pago: cotizacion.estadoPagoLegible,
+        },
+      })
+    } catch (error) {
+      return response.status(400).json({
+        success: false,
+        message: 'Error al registrar el pago',
+        error: error.message,
       })
     }
+  }
 
-    return detalles
+  /**
+   * Descargar cotización en HTML/PDF
+   */
+  async descargarPDF({ params, response }: HttpContext) {
+    try {
+      const cotizacion = await Cotizacion.findOrFail(params.id)
+
+      const htmlContent = await PDFService.generarCotizacionHTML(cotizacion)
+
+      response.header('Content-Type', 'text/html; charset=utf-8')
+      response.header(
+        'Content-Disposition',
+        `inline; filename="Cotizacion-${cotizacion.cotizacionNumero}.html"`
+      )
+
+      return response.send(htmlContent)
+    } catch (error) {
+      return response.status(500).json({
+        success: false,
+        message: 'Error al generar el documento',
+        error: error instanceof Error ? error.message : 'desconocido',
+      })
+    }
   }
 }

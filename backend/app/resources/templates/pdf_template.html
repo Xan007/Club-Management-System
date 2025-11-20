@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Cotización Corporación Club El Meta</title>
+  <style>
+    {{CSS}}
+  </style>
+</head>
+<body>
+  <!-- PÁGINA 1 - COTIZACIÓN -->
+  <div class="page">
+    <!-- Header -->
+    <div class="page-header">
+      <div class="header-content">
+        <div class="header-text">CORPORACIÓN CLUB EL META</div>
+        <div class="header-nit">NIT: 892.000.682-1</div>
+      </div>
+      <div class="header-logo">
+        <img src="data:image/png;base64,{{LOGO_BASE64}}" alt="Logo" style="max-width: 100%; max-height: 100%; object-fit: contain;" />
+      </div>
+    </div>
+
+    <!-- Contenido principal -->
+    <div class="page-content">
+      <div class="header-cot">COT. {{numeroCotz}}</div>
+      <div class="header-fecha">Fecha: {{fecha}}</div>
+
+      <!-- Cliente -->
+      <table class="no-border">
+        <tr>
+          <td><strong>Señor:</strong></td>
+          <td>{{cliente.nombre}}</td>
+        </tr>
+        <tr>
+          <td><strong>Cel:</strong></td>
+          <td>{{cliente.telefono}}</td>
+        </tr>
+        <tr>
+          <td><strong>E-mail:</strong></td>
+          <td>{{cliente.email}}</td>
+        </tr>
+      </table>
+
+      <p><strong>Apreciados señores,</strong></p>
+      <p>Reciban un cordial saludo de la CORPORACIÓN CLUB EL META. Nos complace dar a conocer nuestro portafolio de servicios para la realización de su evento en nuestras instalaciones.</p>
+
+      <!-- Evento -->
+      <table class="no-border">
+        <tr>
+          <td><strong>Fecha del Evento:</strong></td>
+          <td>{{evento.fecha}}</td>
+        </tr>
+        <tr>
+          <td><strong>Hora:</strong></td>
+          <td>{{evento.hora}} por {{evento.duracion}} horas</td>
+        </tr>
+        <tr>
+          <td><strong>Salón:</strong></td>
+          <td>{{evento.salon}}</td>
+        </tr>
+        <tr>
+          <td><strong>Disposición:</strong></td>
+          <td>{{evento.disposicion}}</td>
+        </tr>
+        <tr>
+          <td><strong>N° de Personas:</strong></td>
+          <td>{{evento.asistentes}}</td>
+        </tr>
+      </table>
+
+      <br />
+
+      <!-- Servicios -->
+      <table>
+        <thead>
+          <tr>
+            <th>SERVICIO</th>
+            <th>CANTIDAD</th>
+            <th>VALOR UNITARIO</th>
+            <th>TOTAL</th>
+          </tr>
+        </thead>
+        <tbody>
+          {{servicios}}
+          <tr class="total-row">
+            <td colspan="3" class="right">TOTAL COTIZACIÓN</td>
+            <td class="right">{{totales.total}}</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <!-- Notas -->
+      <div class="note">
+        <strong>NOTA:</strong> {{observaciones}}<br /><br />
+        <strong>✓ Estos precios INCLUYEN el Impuesto del IVA e Ipconsumo.</strong><br /><br />
+        <strong>VIGENCIA:</strong> La presente propuesta tendrá vigencia de 5 días a partir de la fecha de expedición.
+      </div>
+
+      <div class="important-note">
+        <strong>NOTA IMPORTANTE:</strong><br />
+        Para garantizar el evento se debe enviar confirmación por escrito donde se especifiquen los servicios reservados y realizar el anticipo del <strong>50% del valor de la cotización ({{totales.abono50}})</strong> treinta (30) días antes del evento. El saldo debe estar cancelado cuarenta y ocho (48) horas antes del evento. Los consumos y servicios adicionales deberán ser cancelados al finalizar el evento.
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="page-footer">
+      <div class="footer-text">CORPORACIÓN CLUB EL META – CALLE 48A # CARRERA 30 BARRIO CAUDAL ORIENTAL – VILLAVICENCIO, META</div>
+    </div>
+  </div>
+
+  <!-- PÁGINA 2 - FORMAS DE PAGO -->
+  <div class="page">
+    <!-- Header -->
+    <div class="page-header">
+      <div class="header-content">
+        <div class="header-text">CORPORACIÓN CLUB EL META</div>
+        <div class="header-nit">NIT: 892.000.682-1</div>
+      </div>
+      <div class="header-logo">
+        <img src="data:image/png;base64,{{LOGO_BASE64}}" alt="Logo" style="max-width: 100%; max-height: 100%; object-fit: contain;" />
+      </div>
+    </div>
+
+    <!-- Contenido principal -->
+    <div class="page-content">
+      <h3>FORMAS DE PAGO</h3>
+
+      <p>Se pueden realizar las siguientes formas de pago:</p>
+
+      <ul>
+        <li>Pago en efectivo o tarjeta crédito/débito en la instalación del CLUB EL META.</li>
+        <li>Consignación o transferencia bancaria a nombre de:</li>
+      </ul>
+
+      <p><strong>CORPORACIÓN CLUB META NIT: 892.000.682-1</strong></p>
+
+      <p>
+        <strong>BANCOLOMBIA CUENTA CORRIENTE:</strong> (Consultar con administración)<br />
+        <strong>DAVIVIENDA CUENTA CORRIENTE:</strong> (Consultar con administración)<br />
+        <strong>DAVIVIENDA CUENTA DE AHORROS:</strong> (Consultar con administración)
+      </p>
+
+      <br /><br /><br />
+
+      <p>Agradeciendo nuevamente su preferencia,</p>
+      <br /><br /><br />
+
+      <p>_________________________<br /><strong>Gerente</strong><br />CORPORACIÓN CLUB EL META</p>
+    </div>
+
+    <!-- Footer -->
+    <div class="page-footer">
+      <div class="footer-text">CORPORACIÓN CLUB EL META – CALLE 48A # CARRERA 30 BARRIO CAUDAL ORIENTAL – VILLAVICENCIO, META</div>
+    </div>
+  </div>
+</body>
+</html>
+
+
+

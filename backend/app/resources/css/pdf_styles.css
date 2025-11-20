@@ -1,0 +1,284 @@
+/**
+ * Estilos para generación de PDF de Cotizaciones
+ * Corporación Club El Meta
+ */
+
+html, body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  font-family: Arial, sans-serif;
+  font-size: 12px;
+  color: #000;
+  background: white;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+/* Página con estructura flex para header/content/footer */
+.page {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100vh;
+  min-height: 100vh;
+  page-break-after: always;
+  page-break-inside: avoid;
+  background: white;
+  margin: 0;
+  padding: 0;
+}
+
+.page:last-child {
+  page-break-after: avoid;
+}
+
+.page:last-child {
+  page-break-after: avoid;
+}
+
+/* Header - Fijo arriba */
+.page-header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 15px 20px;
+  border-bottom: none;
+  background: white;
+  position: relative;
+  min-height: 70px;
+  flex-shrink: 0;
+  page-break-inside: avoid;
+}
+
+.header-content {
+  text-align: center;
+}
+
+.header-logo {
+  width: 90px;
+  height: 70px;
+  background: transparent;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  color: #999;
+  position: absolute;
+  right: 20px;
+  top: 50%;
+  transform: translateY(-50%);
+  flex-shrink: 0;
+}
+
+.header-text {
+  font-size: 16px;
+  font-weight: bold;
+  margin: 0;
+  line-height: 1.2;
+}
+
+.header-nit {
+  font-size: 12px;
+  margin-top: 3px;
+  font-weight: 500;
+}
+
+.header-cot {
+  font-size: 12px;
+  font-weight: bold;
+  margin: 10px 0;
+  color: #333;
+}
+
+.header-fecha {
+  font-size: 11px;
+  margin-bottom: 10px;
+  color: #555;
+}
+
+/* Contenido principal - Crece dinámicamente */
+.page-content {
+  flex: 1;
+  padding: 20px;
+  overflow: auto;
+  page-break-inside: auto;
+}
+
+/* Footer - Pegado al fondo */
+.page-footer {
+  flex-shrink: 0;
+  padding: 12px 20px;
+  border-top: none;
+  background: white;
+  text-align: center;
+  font-size: 9px;
+  color: #666;
+  page-break-inside: avoid;
+  margin-top: auto;
+}
+
+.footer-text {
+  margin: 0;
+  line-height: 1.3;
+}
+
+/* Contenido principal de la página */
+.page-content {
+  padding: 20px;
+}
+
+/* Footer */
+.page-footer {
+  padding: 12px 20px;
+  border-top: 1px solid #000;
+  background: white;
+  text-align: center;
+  font-size: 9px;
+  color: #666;
+  margin-top: 20px;
+  page-break-inside: avoid;
+}
+
+.footer-text {
+  margin: 0;
+  line-height: 1.3;
+}
+
+/* TIPOGRAFÍA */
+p {
+  margin: 8px 0;
+  text-align: justify;
+  line-height: 1.4;
+  font-size: 11px;
+}
+
+h3 {
+  font-size: 13px;
+  font-weight: bold;
+  margin: 15px 0 10px 0;
+  border-bottom: 1px solid #000;
+  padding-bottom: 5px;
+}
+
+/* TABLAS */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 10px;
+  margin-bottom: 10px;
+  font-size: 11px;
+}
+
+th,
+td {
+  border: 1px solid #000;
+  padding: 6px;
+  text-align: left;
+}
+
+th {
+  background: #ddd;
+  font-weight: bold;
+  font-size: 11px;
+}
+
+.no-border {
+  margin: 10px 0;
+}
+
+.no-border td {
+  border: none;
+  padding: 3px 0;
+  font-size: 11px;
+}
+
+.total-row {
+  font-weight: bold;
+  background: #eee;
+}
+
+/* NOTAS Y SECCIONES */
+.note {
+  margin-top: 10px;
+  font-size: 11px;
+  line-height: 1.5;
+  padding: 10px;
+  background: #fafafa;
+  border-left: 3px solid #333;
+}
+
+.important-note {
+  margin-top: 10px;
+  font-size: 10px;
+  line-height: 1.4;
+  padding: 8px;
+  border: 1px solid #000;
+  background: #fff9f0;
+}
+
+/* LISTAS */
+ul {
+  margin-left: 20px;
+  margin-bottom: 10px;
+  font-size: 11px;
+}
+
+li {
+  margin-bottom: 5px;
+}
+
+/* ALINEACIÓN */
+.right {
+  text-align: right;
+}
+
+.center {
+  text-align: center;
+}
+
+/* IMPRESIÓN PDF */
+@media print {
+  @page {
+    size: A4;
+    margin: 0;
+  }
+
+  body {
+    margin: 0;
+    padding: 0;
+  }
+
+  .page {
+    width: 100%;
+    min-height: 297mm;
+    display: flex;
+    flex-direction: column;
+    margin: 0;
+    padding: 0;
+    page-break-after: auto;
+    page-break-inside: auto;
+  }
+
+  .page-header {
+    flex-shrink: 0;
+    page-break-inside: avoid;
+  }
+
+  .page-content {
+    flex: 1;
+    overflow: hidden;
+    page-break-inside: auto;
+  }
+
+  .page-footer {
+    flex-shrink: 0;
+    page-break-inside: avoid;
+    margin-top: auto;
+  }
+}

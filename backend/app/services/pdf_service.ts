@@ -1,157 +1,194 @@
-import PDFDocument from 'pdfkit'
-import type Cotizacion from '#models/cotizacion'
-import { DateTime } from 'luxon'
+import Cotizacion from '#models/cotizacion'
+import Espacio from '#models/espacio'
+import Disposicion from '#models/disposicion'
+import { readFileSync } from 'fs'
+import { fileURLToPath } from 'url'
+import { dirname, join } from 'path'
 
-interface CotizacionItem {
-  servicio: string
-  cantidad: number
-  valorUnitario: number
-  total: number
-}
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = dirname(__filename)
 
 export class PDFService {
   /**
-   * Genera un PDF con el formato de cotización del Club El Meta
+   * Generar HTML de cotización desde plantilla
    */
-  static async generarCotizacionPDF(cotizacion: Cotizacion): Promise<Buffer> {
-    return new Promise((resolve, reject) => {
-      try {
-        const doc = new PDFDocument({
-          size: 'LETTER',
-          margins: { top: 50, bottom: 50, left: 50, right: 50 },
-        })
+  static async generarCotizacionHTML(cotizacion: Cotizacion): Promise<string> {
+    const variables = await this.prepararVariables(cotizacion)
+    const css = this.cargarCSS()
+    const plantilla = this.cargarPlantilla()
+    const logoBase64 = this.cargarLogoPNG()
 
-        const chunks: Buffer[] = []
-        doc.on('data', (chunk) => chunks.push(chunk))
-        doc.on('end', () => resolve(Buffer.concat(chunks)))
-        doc.on('error', reject)
+    return this.renderHTML(plantilla, css, logoBase64, variables)
+  }
 
-        // Header con logo (texto por ahora, puedes añadir imagen después)
-        doc.fontSize(10).text('CORPORACION CLUB EL META', 50, 50, { align: 'center' })
-        doc.fontSize(8).text('892.000.682-1', { align: 'center' })
-        doc.moveDown(0.5)
-        doc.fontSize(10).text(`Cot. ${cotizacion.cotizacionNumero}`, { align: 'center' })
-        doc.fontSize(8).text(`Fecha: ${DateTime.now().toFormat('dd \'de\' MMMM \'del\' yyyy', { locale: 'es' })}`, {
-          align: 'center',
-        })
-        doc.moveDown(2)
+  /**
+   * Preparar variables para la plantilla
+   */
+  private static async prepararVariables(cotizacion: Cotizacion): Promise<Record<string, any>> {
+    const detalles = cotizacion.getDetalles()
+    const fecha = new Date(cotizacion.fecha)
+    const meses = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre']
 
-        // Señor
-        doc.fontSize(10).text('Señor:', 50)
-        doc.text(cotizacion.nombre)
-        doc.moveDown(0.5)
+    const fechaFormato = `${fecha.getDate().toString().padStart(2, '0')} de ${meses[fecha.getMonth()].toUpperCase()} del ${fecha.getFullYear()}`
+    const total = parseFloat(cotizacion.valorTotal.toString())
+    const abono50 = Math.round(total * 0.5)
 
-        // Saludo
-        doc.fontSize(9)
-        doc.text('Apreciados señores,', 50)
-        doc.text(
-          'Reciban un cordial saludo de la CORPORACIÓN CLUB EL META, nos complace darle a conocer nuestro portafolio de servicios para la realización de su evento en nuestras instalaciones.'
-        )
-        doc.moveDown(1)
-
-        // Detalles del evento
-        doc.text(`Fecha: ${cotizacion.fecha}`)
-        doc.text(`Hora: ${cotizacion.hora}`)
-        doc.text(`N° de Personas: ${cotizacion.asistentes}`)
-        doc.moveDown(1)
-
-        // Tabla de servicios
-        const detalles: CotizacionItem[] = JSON.parse(cotizacion.detalles)
-        const tableTop = doc.y
-        const colWidths = { servicio: 250, cantidad: 60, valor: 80, total: 80 }
-        const tableLeft = 50
-
-        // Header de tabla
-        doc.fontSize(8).fillColor('#666')
-        doc.rect(tableLeft, tableTop, 470, 20).fill('#E5E5E5')
-        doc.fillColor('#000')
-        doc.text('SERVICIO', tableLeft + 5, tableTop + 5)
-        doc.text('CANTIDAD', tableLeft + colWidths.servicio + 5, tableTop + 5)
-        doc.text('VALOR', tableLeft + colWidths.servicio + colWidths.cantidad + 5, tableTop + 5)
-        doc.text('TOTAL', tableLeft + colWidths.servicio + colWidths.cantidad + colWidths.valor + 5, tableTop + 5)
-
-        let currentY = tableTop + 25
-
-        // Filas de servicios
-        detalles.forEach((item) => {
-          doc.fontSize(8)
-          doc.text(item.servicio, tableLeft + 5, currentY, { width: colWidths.servicio - 10 })
-          doc.text(item.cantidad.toString(), tableLeft + colWidths.servicio + 5, currentY)
-          doc.text(
-            `$${item.valorUnitario.toLocaleString('es-CO')}`,
-            tableLeft + colWidths.servicio + colWidths.cantidad + 5,
-            currentY
-          )
-          doc.text(
-            `$${item.total.toLocaleString('es-CO')}`,
-            tableLeft + colWidths.servicio + colWidths.cantidad + colWidths.valor + 5,
-            currentY
-          )
-
-          // Línea separadora
-          currentY += 20
-          doc
-            .moveTo(tableLeft, currentY)
-            .lineTo(tableLeft + 470, currentY)
-            .stroke('#DDD')
-          currentY += 5
-        })
-
-        // Total
-        doc.fontSize(9).fillColor('#000')
-        doc.text('TOTAL COTIZACION', tableLeft + 5, currentY, { continued: true })
-        doc.text(`$${cotizacion.valorTotal.toLocaleString('es-CO')}`, {
-          align: 'right',
-          width: 465,
-        })
-        currentY += 25
-
-        // Notas
-        doc.fontSize(8).moveDown(1)
-        doc.text(
-          'NOTA: Pendiente totalizar de acuerdo a las bebidas que requieran para el evento, las opciones de menú y la carta de bebidas ira como documento anexo a la cotización.',
-          50,
-          currentY + 20,
-          { width: 500 }
-        )
-        doc.moveDown(0.5)
-        doc.text('Estos precios incluyen el impuesto del IVA y del iconsumo.')
-        doc.moveDown(0.5)
-        doc.text('Pendiente consumos adicionales de bebidas.')
-        doc.moveDown(0.5)
-        doc.text('Nota: el encargado trae torta.')
-        doc.moveDown(1)
-
-        doc.fontSize(9).fillColor('#000')
-        doc.text(
-          'VIGENCIA: La presente propuesta tendrá vigencia de 5 días a partir de la fecha de expedición.',
-          { width: 500 }
-        )
-        doc.moveDown(1)
-
-        doc.fontSize(9).fillColor('#000').text('NOTA IMPORTANTE.', { underline: true })
-        doc.fontSize(8).fillColor('#000')
-        doc.text(
-          'Para garantizar el evento se debe enviar confirmación por escrito donde se especifiquen los servicios reservados y realizar el anticipo del 50 % del valor de la cotización, 30 días antes y el saldo debe estar cancelado 48 horas antes del evento, los consumos y servicios adicionales deberán ser cancelados al finalizar el evento.',
-          { width: 500 }
-        )
-        doc.moveDown(2)
-
-        // Footer
-        doc
-          .fontSize(8)
-          .text(
-            'CORPORACION EL CLUB META CALLE 48 A CARRERA 30 BARRIO CAUDAL ORIENTAL',
-            50,
-            doc.page.height - 100,
-            { align: 'center', width: 500 }
-          )
-        doc.text('VILLAVICENCIO -META', { align: 'center', width: 500 })
-
-        doc.end()
-      } catch (error) {
-        reject(error)
+    // Obtener nombre del salón desde Espacio
+    let nombreSalon = cotizacion.salon || 'A definir'
+    try {
+      const espacio = await Espacio.find(cotizacion.espacioId)
+      if (espacio) {
+        nombreSalon = espacio.nombre
       }
-    })
+    } catch (error) {
+      console.warn('No se pudo obtener el nombre del salón:', error)
+    }
+
+    // Obtener configuración de disposición
+    let configuracionDisposicion = 'A definir'
+    try {
+      const disposicion = await Disposicion.find(cotizacion.disposicionId)
+      if (disposicion) {
+        configuracionDisposicion = disposicion.nombre
+      }
+    } catch (error) {
+      console.warn('No se pudo obtener la configuración de disposición:', error)
+    }
+
+    const servicios = detalles.map((d) => ({
+      servicio: d.servicio,
+      cantidad: d.cantidad,
+      valorUnitario: this.formatearDinero(d.valorUnitario),
+      total: this.formatearDinero(d.total),
+    }))
+
+    return {
+      numeroCotz: cotizacion.cotizacionNumero,
+      fecha: fechaFormato,
+      cliente: {
+        nombre: cotizacion.nombre,
+        telefono: cotizacion.telefono || '___________________',
+        email: cotizacion.email,
+      },
+      evento: {
+        fecha: fechaFormato,
+        hora: cotizacion.hora,
+        duracion: cotizacion.duracion,
+        asistentes: cotizacion.asistentes,
+        salon: nombreSalon,
+        disposicion: configuracionDisposicion,
+      },
+      servicios,
+      totales: {
+        total: this.formatearDinero(total),
+        abono50: this.formatearDinero(abono50),
+      },
+      observaciones: cotizacion.observaciones || 'Pendiente de detalles adicionales según requerimientos del cliente.',
+    }
+  }
+
+  /**
+   * Cargar CSS desde archivo externo
+   */
+  private static cargarCSS(): string {
+    try {
+      const cssPath = join(__dirname, '../resources/css/pdf_styles.css')
+      return readFileSync(cssPath, 'utf-8')
+    } catch (error) {
+      console.warn('CSS no encontrado:', error)
+      return ''
+    }
+  }
+
+  /**
+   * Cargar logo en base64
+   */
+  private static cargarLogoPNG(): string {
+    try {
+      const logoPath = join(__dirname, '../resources/images/logo_corpmeta.png')
+      const buffer = readFileSync(logoPath)
+      return buffer.toString('base64')
+    } catch (error) {
+      console.warn('Logo no encontrado:', error)
+      return ''
+    }
+  }
+
+  /**
+   * Cargar plantilla HTML
+   */
+  private static cargarPlantilla(): string {
+    try {
+      const templatePath = join(__dirname, '../resources/templates/pdf_template.html')
+      return readFileSync(templatePath, 'utf-8')
+    } catch (error) {
+      console.error('Plantilla no encontrada:', error)
+      throw new Error('No se pudo cargar la plantilla PDF')
+    }
+  }
+
+  /**
+   * Renderizar HTML reemplazando variables en plantilla
+   */
+  private static renderHTML(plantilla: string, css: string, logoBase64: string, variables: Record<string, any>): string {
+    let html = plantilla
+
+    // Reemplazar CSS
+    html = html.replace('{{CSS}}', css)
+
+    // Reemplazar logo base64
+    html = html.replace(/{{LOGO_BASE64}}/g, logoBase64)
+
+    // Reemplazar variables principales
+    html = html.replace('{{numeroCotz}}', variables.numeroCotz)
+    html = html.replace('{{fecha}}', variables.fecha)
+
+    // Reemplazar datos del cliente
+    html = html.replace('{{cliente.nombre}}', variables.cliente.nombre)
+    html = html.replace('{{cliente.telefono}}', variables.cliente.telefono)
+    html = html.replace('{{cliente.email}}', variables.cliente.email)
+
+    // Reemplazar datos del evento
+    html = html.replace('{{evento.fecha}}', variables.evento.fecha)
+    html = html.replace('{{evento.hora}}', variables.evento.hora)
+    html = html.replace('{{evento.duracion}}', variables.evento.duracion)
+    html = html.replace('{{evento.asistentes}}', variables.evento.asistentes)
+    html = html.replace('{{evento.salon}}', variables.evento.salon)
+    html = html.replace('{{evento.disposicion}}', variables.evento.disposicion)
+
+    // Reemplazar servicios
+    const filasServicios = variables.servicios
+      .map(
+        (s: any) => `
+        <tr>
+          <td>${s.servicio}</td>
+          <td class="center">${s.cantidad}</td>
+          <td class="right">${s.valorUnitario}</td>
+          <td class="right">${s.total}</td>
+        </tr>`
+      )
+      .join('')
+    html = html.replace('{{servicios}}', filasServicios)
+
+    // Reemplazar totales
+    html = html.replace('{{totales.total}}', variables.totales.total)
+    html = html.replace('{{totales.abono50}}', variables.totales.abono50)
+
+    // Reemplazar observaciones
+    html = html.replace('{{observaciones}}', variables.observaciones)
+
+    return html
+  }
+
+  /**
+   * Formatear número como dinero COP
+   */
+  private static formatearDinero(valor: number): string {
+    return new Intl.NumberFormat('es-CO', {
+      style: 'currency',
+      currency: 'COP',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
+    }).format(valor)
   }
 }

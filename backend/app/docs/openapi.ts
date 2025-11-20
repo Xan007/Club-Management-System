@@ -39,5 +39,13 @@
  *     description: Operaciones de usuario autenticado
  *   - name: Admin
  *     description: Operaciones administrativas (solo para rol admin)
+ *   - name: Cotizaciones
+ *     description: Sistema de cotizaciones para eventos - PÚBLICA (sin autenticación requerida)
+ *   - name: Admin - Horarios
+ *     description: Gestión de horarios de operación
+ *   - name: Admin - Plantillas PDF
+ *     description: Gestión de plantillas HTML para generación de PDF
+ *   - name: Admin - Socios
+ *     description: Gestión de socios con códigos y descuentos
  */
 export const openapiDocsRoot = {}
