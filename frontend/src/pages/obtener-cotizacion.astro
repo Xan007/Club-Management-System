@@ -92,7 +92,10 @@ const espacios = [
               </div>
               <div>
                 <label for="time">Hora de Inicio *</label>
-                <input id="time" name="time" type="time" required />
+                <select id="time" name="time" required disabled>
+                  <option value="">Selecciona primero fecha y salón</option>
+                </select>
+                <small id="horas-info" style="display: none; margin-top: 0.5rem; font-size: 0.875rem; color: #6b7280;"></small>
               </div>
             </div>
 
@@ -696,6 +699,33 @@ const espacios = [
       'PRESIDENTE': 'Espacio exclusivo con mobiliario ejecutivo, insonorización y servicio gourmet para reuniones privadas.'
     }
 
+    // CONFIGURACIÓN DE VALIDACIÓN DE FECHAS (modifica estos valores según necesites)
+    const DIAS_MAXIMO_FUTURO = 30  // Máximo 30 días (1 mes) en el futuro
+    const PERMITIR_HOY = true       // true = permitir reservas para hoy, false = solo futuras
+
+    // Configurar restricciones de fecha en el input
+    function configurarRestriccionesFecha() {
+      const dateInput = document.getElementById('date')
+      const hoy = new Date()
+      hoy.setHours(0, 0, 0, 0)
+      
+      // Fecha mínima (hoy o mañana)
+      const fechaMinima = PERMITIR_HOY ? hoy : new Date(hoy.getTime() + 86400000)
+      const minDate = fechaMinima.toISOString().split('T')[0]
+      
+      // Fecha máxima (hoy + DIAS_MAXIMO_FUTURO)
+      const fechaMaxima = new Date(hoy.getTime() + (DIAS_MAXIMO_FUTURO * 86400000))
+      const maxDate = fechaMaxima.toISOString().split('T')[0]
+      
+      dateInput.setAttribute('min', minDate)
+      dateInput.setAttribute('max', maxDate)
+      
+      console.log(`📅 Restricciones de fecha: min=${minDate}, max=${maxDate}`)
+    }
+
+    // Aplicar restricciones al cargar
+    configurarRestriccionesFecha()
+
     // Horarios de operación
     const horarios = {
       0: { nombre: 'Domingo', activo: false, inicio: '—', fin: '—' },
@@ -810,8 +840,63 @@ const espacios = [
       }
     }
 
+    // CARGAR HORAS DISPONIBLES
+    async function cargarHorasDisponibles(espacioId, fecha, duracion = 4) {
+      const timeSelect = document.getElementById('time')
+      const horasInfo = document.getElementById('horas-info')
+      
+      try {
+        console.log(`Cargando horas para espacioId=${espacioId}, fecha=${fecha}, duracion=${duracion}`)
+        timeSelect.innerHTML = '<option value="">Cargando horas...</option>'
+        timeSelect.disabled = true
+        horasInfo.style.display = 'none'
+        
+        const response = await fetch(`${API_URL}/api/disponibilidad/horas?espacioId=${espacioId}&fecha=${fecha}&duracion=${duracion}`)
+        
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`)
+        }
+        
+        const result = await response.json()
+        console.log('Respuesta horas disponibles:', result)
+        
+        if (result.success && result.data) {
+          const horas = result.data.horasDisponibles
+          
+          if (horas.length === 0) {
+            timeSelect.innerHTML = '<option value="">No hay horas disponibles</option>'
+            horasInfo.textContent = result.data.mensaje || 'No hay horarios disponibles para esta fecha'
+            horasInfo.style.display = 'block'
+            horasInfo.style.color = '#dc2626'
+            console.log('⚠️ Sin horas disponibles')
+            return
+          }
+          
+          let html = '<option value="">Selecciona una hora</option>'
+          horas.forEach(hora => {
+            html += `<option value="${hora}">${hora}</option>`
+          })
+          timeSelect.innerHTML = html
+          timeSelect.disabled = false
+          
+          horasInfo.textContent = `✓ ${horas.length} horarios disponibles (slots de 1 hora)`
+          horasInfo.style.display = 'block'
+          horasInfo.style.color = '#10b981'
+          console.log(`✅ ${horas.length} horas disponibles cargadas`)
+        } else {
+          throw new Error(result.message || 'Respuesta inválida del servidor')
+        }
+      } catch (error) {
+        console.error('❌ Error cargando horas:', error)
+        timeSelect.innerHTML = '<option value="">Error al cargar (revisa servidor)</option>'
+        horasInfo.textContent = 'Error: Verifica que el servidor backend esté corriendo'
+        horasInfo.style.display = 'block'
+        horasInfo.style.color = '#dc2626'
+      }
+    }
+
     // EVENT: CAMBIO DE SALÓN
-    salonSelect.addEventListener('change', (e) => {
+    salonSelect.addEventListener('change', async (e) => {
       try {
         const salonData = JSON.parse(e.target.value)
         const opt = e.target.selectedOptions[0]
@@ -828,6 +913,14 @@ const espacios = [
         
         // Cargar tarifas del nuevo salón
         cargarTarifas(salonData.id)
+        
+        // Cargar horas disponibles si ya hay fecha seleccionada
+        const dateInput = document.getElementById('date')
+        if (dateInput.value) {
+          const durationInput = document.getElementById('duration')
+          const duracion = durationInput.value ? parseInt(durationInput.value) : 4
+          await cargarHorasDisponibles(salonData.id, dateInput.value, duracion)
+        }
       } catch (error) {
         console.error('Error al cambiar salón:', error)
       }
@@ -836,13 +929,15 @@ const espacios = [
     // EVENT: CAMBIO DE DISPOSICIÓN
     disposicionSelect.addEventListener('change', actualizarCapacidad)
 
-    // EVENT: CAMBIO DE FECHA - MOSTRAR HORARIO
+    // EVENT: CAMBIO DE FECHA - MOSTRAR HORARIO Y CARGAR HORAS
     const dateInput = document.getElementById('date')
     const horarioInfo = document.getElementById('horario-info')
     
-    dateInput.addEventListener('change', () => {
+    dateInput.addEventListener('change', async () => {
       if (!dateInput.value) {
         horarioInfo.style.display = 'none'
+        document.getElementById('time').innerHTML = '<option value="">Selecciona primero la fecha</option>'
+        document.getElementById('time').disabled = true
         return
       }
       
@@ -861,8 +956,39 @@ const espacios = [
           horarioInfo.style.background = '#fef2f2'
           horarioInfo.style.borderLeftColor = '#dc2626'
           horarioInfo.style.color = '#991b1b'
+          document.getElementById('time').innerHTML = '<option value="">Club cerrado este día</option>'
+          document.getElementById('time').disabled = true
+          document.getElementById('horas-info').style.display = 'none'
+          horarioInfo.style.display = 'block'
+          return
         }
         horarioInfo.style.display = 'block'
+      }
+      
+      // Cargar horas disponibles si hay salón seleccionado
+      const salonSelect = document.getElementById('salon')
+      if (salonSelect.value) {
+        const salonData = JSON.parse(salonSelect.value)
+        const durationInput = document.getElementById('duration')
+        const duracion = durationInput.value ? parseInt(durationInput.value) : 4
+        await cargarHorasDisponibles(salonData.id, dateInput.value, duracion)
+      } else {
+        document.getElementById('time').innerHTML = '<option value="">Selecciona primero el salón</option>'
+        document.getElementById('time').disabled = true
+      }
+    })
+
+    // EVENT: CAMBIO DE DURACIÓN - RECARGAR HORAS DISPONIBLES
+    const durationInput = document.getElementById('duration')
+    durationInput.addEventListener('change', async () => {
+      const salonSelect = document.getElementById('salon')
+      const dateInput = document.getElementById('date')
+      
+      // Solo recargar si ya hay salón y fecha seleccionados
+      if (salonSelect.value && dateInput.value) {
+        const salonData = JSON.parse(salonSelect.value)
+        const duracion = durationInput.value ? parseInt(durationInput.value) : 4
+        await cargarHorasDisponibles(salonData.id, dateInput.value, duracion)
       }
     })
 
