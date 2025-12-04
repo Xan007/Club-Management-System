@@ -132,6 +132,8 @@
  *     description: Operaciones de usuario autenticado
  *   - name: Admin
  *     description: Operaciones administrativas (solo para rol admin)
+ *   - name: Disponibilidad
+ *     description: Consultar disponibilidad de espacios y horas - PÚBLICA
  *   - name: Cotizaciones
  *     description: Sistema de cotizaciones para eventos - PÚBLICA (sin autenticación requerida)
  *   - name: Admin - Horarios

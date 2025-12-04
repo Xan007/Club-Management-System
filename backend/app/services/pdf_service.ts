@@ -93,8 +93,16 @@ export class PDFService {
       total: this.formatearDinero(d.total),
     }))
 
+    // Calcular hora de fin
+    const horaInicio = cotizacion.hora.split(':')
+    const horaInicioMinutos = parseInt(horaInicio[0]) * 60 + parseInt(horaInicio[1] || '0')
+    const horaFinMinutos = horaInicioMinutos + cotizacion.duracion * 60
+    const horaFinHoras = Math.floor(horaFinMinutos / 60) % 24
+    const horaFinMins = horaFinMinutos % 60
+    const horaFin = `${horaFinHoras.toString().padStart(2, '0')}:${horaFinMins.toString().padStart(2, '0')}`
+
     return {
-      numeroCotz: cotizacion.cotizacionNumero,
+      numeroCotz: cotizacion.id.toString(),
       fecha: fechaFormato,
       cliente: {
         nombre: cotizacion.nombre,
@@ -103,7 +111,8 @@ export class PDFService {
       },
       evento: {
         fecha: fechaFormato,
-        hora: cotizacion.hora,
+        horaInicio: cotizacion.hora,
+        horaFin: horaFin,
         duracion: cotizacion.duracion,
         asistentes: cotizacion.asistentes,
         salon: nombreSalon,

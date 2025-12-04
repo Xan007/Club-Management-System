@@ -454,6 +454,74 @@ export class CotizacionService {
   }
 
   /**
+   * Cancelar automáticamente cotizaciones que se crucen con una reserva confirmada
+   */
+  static async cancelarCotizacionesCruzadas(
+    espacioId: number,
+    fecha: string,
+    horaInicio: string,
+    duracion: number,
+    cotizacionIdExcluir: number
+  ): Promise<number> {
+    const horaFin = this.calcularHoraFin(horaInicio, duracion)
+
+    // Buscar cotizaciones pendientes que se crucen
+    const cotizacionesConflictivas = await Cotizacion.query()
+      .where('espacio_id', espacioId)
+      .where('fecha', fecha)
+      .where('estado', 'pendiente')
+      .where('id', '!=', cotizacionIdExcluir)
+      .preload('espacio')
+
+    const cotizacionesACancelar: Cotizacion[] = []
+    const horaInicioMinutos = this.horaAMinutos(horaInicio)
+    const horaFinMinutos = this.horaAMinutos(horaFin)
+
+    // Identificar cotizaciones con cruce de horario
+    for (const cotizacion of cotizacionesConflictivas) {
+      const cotizHoraFin = this.calcularHoraFin(cotizacion.hora, cotizacion.duracion)
+      const cotizHoraInicioMinutos = this.horaAMinutos(cotizacion.hora)
+      const cotizHoraFinMinutos = this.horaAMinutos(cotizHoraFin)
+
+      const hayCruce =
+        (cotizHoraInicioMinutos >= horaInicioMinutos && cotizHoraInicioMinutos < horaFinMinutos) ||
+        (cotizHoraFinMinutos > horaInicioMinutos && cotizHoraFinMinutos <= horaFinMinutos) ||
+        (cotizHoraInicioMinutos <= horaInicioMinutos && cotizHoraFinMinutos >= horaFinMinutos)
+
+      if (hayCruce) {
+        cotizacion.estado = 'rechazada'
+        cotizacion.observaciones = cotizacion.observaciones
+          ? `${cotizacion.observaciones}\n\n[SISTEMA] Cancelada automáticamente por conflicto con reserva confirmada #${cotizacionIdExcluir}`
+          : `[SISTEMA] Cancelada automáticamente por conflicto con reserva confirmada #${cotizacionIdExcluir}`
+        await cotizacion.save()
+        cotizacionesACancelar.push(cotizacion)
+      }
+    }
+
+    // Enviar emails en batch si hay cancelaciones
+    if (cotizacionesACancelar.length > 0) {
+      const { EmailService } = await import('#services/email_service')
+      await EmailService.enviarNotificacionesCancelacionBatch(
+        cotizacionesACancelar.map((cotizacion) => ({
+          nombreCliente: cotizacion.nombre,
+          emailCliente: cotizacion.email,
+          cotizacionId: cotizacion.id,
+          salon: cotizacion.espacio?.nombre || 'N/A',
+          fecha: cotizacion.fecha,
+          hora: cotizacion.hora,
+          motivo:
+            'Otra reserva fue confirmada para el mismo horario antes que la suya. Le invitamos a realizar una nueva cotización para una fecha u horario diferente.',
+          tipoRechazo: 'automatico' as const,
+        }))
+      ).catch((error) => {
+        console.error('Error enviando batch de emails de cancelación:', error)
+      })
+    }
+
+    return cotizacionesACancelar.length
+  }
+
+  /**
    * Calcular hora de finalización
    */
   private static calcularHoraFin(horaInicio: string, duracion: number): string {

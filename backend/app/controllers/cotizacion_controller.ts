@@ -7,42 +7,6 @@ import vine from '@vinejs/vine'
 
 export default class CotizacionController {
   /**
-   * Obtener disponibilidad de fechas para un espacio
-   */
-  async obtenerDisponibilidad({ request, response }: HttpContext) {
-    const query = request.qs()
-    try {
-      const { espacioId, fecha, duracion, tipoEvento } = query
-
-      if (!espacioId || !fecha || !duracion || !tipoEvento) {
-        return response.status(400).json({
-          success: false,
-          message: 'Faltan parámetros: espacioId, fecha, duracion, tipoEvento',
-        })
-      }
-
-      const validacion = await CotizacionService.validarDisponibilidad(
-        parseInt(espacioId),
-        fecha,
-        query.horaInicio || '08:00',
-        parseInt(duracion),
-        tipoEvento
-      )
-
-      return response.json({
-        success: true,
-        data: validacion,
-      })
-    } catch (error) {
-      return response.status(500).json({
-        success: false,
-        message: 'Error al verificar disponibilidad',
-        error: error.message,
-      })
-    }
-  }
-
-  /**
    * Crear una nueva cotización
    */
   async crearCotizacion({ request, response }: HttpContext) {
@@ -100,7 +64,6 @@ export default class CotizacionController {
       // Enviar correos de notificación (async, no bloqueante)
       const datosEmail: DatosCotizacionEmail = {
         cotizacionId: resultado.cotizacion.id,
-        cotizacionNumero: resultado.cotizacion.cotizacionNumero,
         nombreCliente: resultado.cotizacion.nombre,
         emailCliente: resultado.cotizacion.email,
         telefonoCliente: resultado.cotizacion.telefono,
@@ -239,57 +202,309 @@ export default class CotizacionController {
   }
 
   /**
-   * Confirmar cotización (cambiar estado a aceptada)
+   * Actualizar/Editar cotización existente
+   * PUT /api/cotizaciones/:id
    */
-  async confirmarCotizacion({ params, response }: HttpContext) {
+  async actualizarCotizacion({ params, request, response }: HttpContext) {
     try {
       const cotizacion = await Cotizacion.findOrFail(params.id)
 
+      // No permitir editar cotizaciones cerradas/aceptadas
       if (cotizacion.estado === 'aceptada') {
         return response.status(400).json({
           success: false,
-          message: 'La cotización ya ha sido confirmada',
+          message: 'No se puede editar una cotización ya aceptada (cerrada)',
         })
       }
 
-      await CotizacionService.confirmarCotizacion(cotizacion.id)
-      await cotizacion.refresh()
+      const schema = vine.object({
+        espacioId: vine.number().optional(),
+        configuracionEspacioId: vine.number().optional(),
+        fecha: vine.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
+        horaInicio: vine.string().regex(/^\d{2}:\d{2}$/).optional(),
+        duracion: vine.number().min(1).optional(), // Gerente puede poner cualquier duración
+        tipoEvento: vine.enum(['social', 'empresarial', 'capacitacion']).optional(),
+        asistentes: vine.number().min(1).optional(),
+        tipoCliente: vine.enum(['socio', 'particular']).optional(),
+        servicios: vine.array(vine.number()).optional(),
+        nombre: vine.string().trim().minLength(3).optional(),
+        email: vine.string().email().optional(),
+        telefono: vine.string().trim().optional(),
+        observaciones: vine.string().trim().optional(),
+      })
+
+      const data = await vine.validate({ schema, data: request.all() })
+
+      // Si se cambian datos del evento, recalcular cotización
+      const cambiaEvento = data.espacioId || data.configuracionEspacioId || data.fecha || 
+                          data.horaInicio || data.duracion || data.asistentes || data.servicios
+
+      if (cambiaEvento) {
+        const solicitud: SolicitudCotizacion = {
+          espacioId: data.espacioId || cotizacion.espacioId!,
+          configuracionEspacioId: data.configuracionEspacioId || cotizacion.configuracionEspacioId!,
+          fecha: data.fecha || cotizacion.fecha,
+          horaInicio: data.horaInicio || cotizacion.hora,
+          duracion: data.duracion || cotizacion.duracion,
+          tipoEvento: (data.tipoEvento || cotizacion.tipoEvento) as 'social' | 'empresarial' | 'capacitacion',
+          asistentes: data.asistentes || cotizacion.asistentes,
+          tipoCliente: (data.tipoCliente || 'particular') as 'socio' | 'particular',
+          servicios: data.servicios || (cotizacion.prestaciones as number[]) || [],
+          nombre: data.nombre || cotizacion.nombre,
+          email: data.email || cotizacion.email,
+          telefono: data.telefono || cotizacion.telefono,
+          observaciones: data.observaciones || cotizacion.observaciones,
+        }
+
+        const resultado = await CotizacionService.crearCotizacion(solicitud)
+        
+        // Actualizar cotización existente con nuevos valores
+        cotizacion.merge({
+          espacioId: solicitud.espacioId,
+          configuracionEspacioId: solicitud.configuracionEspacioId,
+          disposicionId: resultado.cotizacion.disposicionId,
+          fecha: solicitud.fecha,
+          hora: solicitud.horaInicio,
+          duracion: solicitud.duracion,
+          asistentes: solicitud.asistentes,
+          tipoEvento: solicitud.tipoEvento,
+          prestaciones: solicitud.servicios,
+          valorTotal: resultado.cotizacion.valorTotal,
+          detalles: resultado.detalles,
+          horasAdicionalesAplicadas: resultado.cotizacion.horasAdicionalesAplicadas,
+          recargoNocturnoAplicado: resultado.cotizacion.recargoNocturnoAplicado,
+        })
+      }
+
+      // Actualizar datos de contacto si se proveen
+      if (data.nombre) cotizacion.nombre = data.nombre
+      if (data.email) cotizacion.email = data.email
+      if (data.telefono !== undefined) cotizacion.telefono = data.telefono
+      if (data.observaciones !== undefined) cotizacion.observaciones = data.observaciones
+
+      await cotizacion.save()
 
       return response.json({
         success: true,
-        message: 'Cotización confirmada exitosamente',
-        data: cotizacion,
+        message: 'Cotización actualizada exitosamente',
+        data: {
+          cotizacion,
+          detalles: cotizacion.getDetalles(),
+          montoAbono: cotizacion.calcularMontoAbono(),
+        },
       })
     } catch (error) {
-      return response.status(400).json({
+      return response.status(500).json({
         success: false,
-        message: 'Error al confirmar la cotización',
+        message: 'Error al actualizar la cotización',
         error: error.message,
       })
     }
   }
 
   /**
-   * Registrar pago de cotización
+   * Cerrar cotización y convertir en reserva (con pago de abono o completo)
+   * POST /api/cotizaciones/:id/cerrar
    */
-  async registrarPago({ params, request, response }: HttpContext) {
+  async cerrarCotizacion({ params, request, response }: HttpContext) {
     try {
-      const { monto, tipo_pago } = request.all()
+      const cotizacion = await Cotizacion.query()
+        .where('id', params.id)
+        .preload('espacio')
+        .firstOrFail()
 
-      if (!monto || !tipo_pago) {
+      if (cotizacion.estado === 'aceptada') {
         return response.status(400).json({
           success: false,
-          message: 'Faltan parámetros: monto, tipo_pago',
+          message: 'La cotización ya está cerrada',
         })
       }
 
+      const schema = vine.object({
+        estadoPago: vine.enum(['abonado', 'pagado']),
+        montoPago: vine.number().min(0).optional(),
+      })
+
+      const data = await vine.validate({ schema, data: request.all() })
+
+      // Calcular monto automáticamente si no se proporciona
+      const total = parseFloat(cotizacion.valorTotal.toString())
+      const abono50 = cotizacion.calcularMontoAbono()
+      
+      let montoPago: number
+      if (data.montoPago !== undefined && data.montoPago !== null) {
+        montoPago = data.montoPago
+      } else {
+        // Si no se proporciona monto, asignar según estado de pago
+        montoPago = data.estadoPago === 'pagado' ? total : abono50
+      }
+
+      // Validar monto según estado de pago
+      if (data.estadoPago === 'abonado' && montoPago < abono50) {
+        return response.status(400).json({
+          success: false,
+          message: `Para cerrar como "abonado" debe pagar mínimo el 50% ($${abono50.toLocaleString('es-CO')})`,
+        })
+      }
+
+      if (data.estadoPago === 'pagado' && montoPago < total) {
+        return response.status(400).json({
+          success: false,
+          message: `Para cerrar como "pagado" debe pagar el 100% ($${total.toLocaleString('es-CO')})`,
+        })
+      }
+
+      // Cerrar cotización y crear bloqueo
+      await CotizacionService.confirmarCotizacion(cotizacion.id)
+      
+      // Actualizar pago
+      cotizacion.montoPagado = montoPago
+      cotizacion.estadoPago = data.estadoPago
+      
+      await cotizacion.save()
+      await cotizacion.refresh()
+
+      // Cancelar automáticamente cotizaciones que se crucen
+      const cotizacionesCanceladas = await CotizacionService.cancelarCotizacionesCruzadas(
+        cotizacion.espacioId!,
+        cotizacion.fecha,
+        cotizacion.hora,
+        cotizacion.duracion,
+        cotizacion.id
+      )
+
+      // Enviar notificación de confirmación al cliente
+      await EmailService.enviarNotificacionConfirmacion({
+        nombreCliente: cotizacion.nombre,
+        emailCliente: cotizacion.email,
+        cotizacionId: cotizacion.id,
+        salon: cotizacion.espacio?.nombre || 'N/A',
+        fecha: cotizacion.fecha,
+        hora: cotizacion.hora,
+        duracion: cotizacion.duracion,
+        valorTotal: parseFloat(cotizacion.valorTotal.toString()),
+        montoPagado: montoPago,
+        estadoPago: data.estadoPago,
+      })
+
+      return response.json({
+        success: true,
+        message: `Cotización cerrada exitosamente como reserva. ${cotizacionesCanceladas} cotización(es) conflictivas canceladas. Se ha notificado al cliente por correo.`,
+        data: {
+          id: cotizacion.id,
+          numero: cotizacion.cotizacionNumero,
+          estado: cotizacion.estadoLegible,
+          estadoPago: cotizacion.estadoPagoLegible,
+          montoPagado: cotizacion.montoPagado,
+          fechaConfirmacion: cotizacion.fechaConfirmacion,
+          cotizacionesCanceladas,
+        },
+      })
+    } catch (error) {
+      return response.status(400).json({
+        success: false,
+        message: 'Error al cerrar la cotización',
+        error: error.message,
+      })
+    }
+  }
+
+  /**
+   * Rechazar cotización manualmente (gerente)
+   * POST /api/cotizaciones/:id/rechazar
+   */
+  async rechazarCotizacion({ params, request, response }: HttpContext) {
+    try {
+      const cotizacion = await Cotizacion.query()
+        .where('id', params.id)
+        .preload('espacio')
+        .firstOrFail()
+
+      if (cotizacion.estado !== 'pendiente') {
+        return response.status(400).json({
+          success: false,
+          message: 'Solo se pueden rechazar cotizaciones pendientes',
+        })
+      }
+
+      const schema = vine.object({
+        motivo: vine.string().trim().optional(),
+      })
+
+      const data = await vine.validate({ schema, data: request.all() })
+
+      cotizacion.estado = 'rechazada'
+      cotizacion.observaciones = data.motivo
+        ? `[GERENTE] ${data.motivo}`
+        : '[GERENTE] Cotización rechazada'
+      await cotizacion.save()
+
+      // Enviar notificación al cliente
+      await EmailService.enviarNotificacionCancelacion({
+        nombreCliente: cotizacion.nombre,
+        emailCliente: cotizacion.email,
+        cotizacionId: cotizacion.id,
+        salon: cotizacion.espacio?.nombre || 'N/A',
+        fecha: cotizacion.fecha,
+        hora: cotizacion.hora,
+        motivo: data.motivo || 'El gerente ha decidido no procesar esta cotización',
+        tipoRechazo: 'manual',
+      })
+
+      return response.json({
+        success: true,
+        message: 'Cotización rechazada. Se ha notificado al cliente por correo.',
+        data: {
+          id: cotizacion.id,
+          numero: cotizacion.cotizacionNumero,
+          estado: cotizacion.estadoLegible,
+        },
+      })
+    } catch (error) {
+      return response.status(400).json({
+        success: false,
+        message: 'Error al rechazar la cotización',
+        error: error.message,
+      })
+    }
+  }
+
+  /**
+   * Registrar pago adicional después de cerrar cotización
+   * POST /api/cotizaciones/:id/registrar-pago
+   */
+  async registrarPagoAdicional({ params, request, response }: HttpContext) {
+    try {
+      const schema = vine.object({
+        monto: vine.number().min(0),
+        metodoPago: vine.string().trim().optional(),
+        observaciones: vine.string().trim().optional(),
+      })
+
+      const data = await vine.validate({ schema, data: request.all() })
+
       const cotizacion = await Cotizacion.findOrFail(params.id)
-      const montoPagado = parseFloat(monto)
+
+      if (cotizacion.estado !== 'aceptada') {
+        return response.status(400).json({
+          success: false,
+          message: 'Solo se pueden registrar pagos en cotizaciones cerradas (aceptadas)',
+        })
+      }
+
+      const montoPagado = parseFloat(data.monto.toString())
       const totalPagado = (parseFloat(cotizacion.montoPagado.toString()) || 0) + montoPagado
+      const total = parseFloat(cotizacion.valorTotal.toString())
+
+      if (totalPagado > total) {
+        return response.status(400).json({
+          success: false,
+          message: `El monto total pagado ($${totalPagado.toLocaleString('es-CO')}) excedería el valor total ($${total.toLocaleString('es-CO')})`,
+        })
+      }
 
       // Actualizar estado de pago
       cotizacion.montoPagado = totalPagado
-      const total = parseFloat(cotizacion.valorTotal.toString())
 
       if (totalPagado >= total) {
         cotizacion.estadoPago = 'pagado'
@@ -303,8 +518,10 @@ export default class CotizacionController {
         success: true,
         message: 'Pago registrado exitosamente',
         data: {
-          monto_pagado: cotizacion.montoPagado,
-          estado_pago: cotizacion.estadoPagoLegible,
+          id: cotizacion.id,
+          estadoPago: cotizacion.estadoPagoLegible,
+          montoPagado: cotizacion.montoPagado,
+          valorTotal: cotizacion.valorTotal,
         },
       })
     } catch (error) {
@@ -328,7 +545,7 @@ export default class CotizacionController {
       response.header('Content-Type', 'application/pdf')
       response.header(
         'Content-Disposition',
-        `inline; filename="Cotizacion-${cotizacion.cotizacionNumero}.pdf"`
+        `inline; filename="Cotizacion-${cotizacion.id}.pdf"`
       )
 
       return response.send(pdfBuffer)
@@ -356,7 +573,6 @@ export default class CotizacionController {
 
       const datosEmail: DatosCotizacionEmail = {
         cotizacionId: cotizacion.id,
-        cotizacionNumero: cotizacion.cotizacionNumero,
         nombreCliente: cotizacion.nombre,
         emailCliente: cotizacion.email,
         telefonoCliente: cotizacion.telefono,

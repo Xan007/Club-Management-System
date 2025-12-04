@@ -27,7 +27,6 @@ const COLORS = {
 
 export interface DatosCotizacionEmail {
   cotizacionId: number
-  cotizacionNumero: string
   nombreCliente: string
   emailCliente: string
   telefonoCliente?: string | null
@@ -72,15 +71,6 @@ function formatearHora24(horaStr: string | null | undefined): string {
   }
 
   return horaStr
-}
-
-function extraerNumeroCotizacion(codigo?: string | null): string {
-  if (!codigo) {
-    return '—'
-  }
-
-  const partes = codigo.split('-')
-  return partes.length > 1 ? partes[partes.length - 1] : codigo
 }
 
 function construirPdfUrl(cotizacionId: number): string {
@@ -246,7 +236,7 @@ function generarEmailGerente(
   mostrarLogo: boolean,
   pdfUrl: string
 ) {
-  const numeroCotizacion = extraerNumeroCotizacion(datos.cotizacionNumero)
+  const numeroCotizacion = datos.cotizacionId.toString()
   const fechaLegible = formatearFechaLegible(datos.fecha)
   const horaFormateada = formatearHora24(datos.hora)
   const salon = datos.salon || 'Por confirmar'
@@ -409,7 +399,7 @@ async function enviarCorreosCotizacion(datos: DatosCotizacionEmail) {
         await resend.emails.send({
           from: FROM_EMAIL,
           to: [emailGerente],
-          subject: `Nueva cotización #${extraerNumeroCotizacion(datos.cotizacionNumero)} - ${datos.nombreCliente}`,
+          subject: `Nueva cotización #${datos.cotizacionId} - ${datos.nombreCliente}`,
           html: htmlGerente,
           attachments: construirAdjuntos(pdfBuffer, logoBuffer),
         })
@@ -429,6 +419,449 @@ async function enviarCorreosCotizacion(datos: DatosCotizacionEmail) {
   return { clienteEnviado, gerenteEnviado, errores }
 }
 
+/**
+ * Enviar notificación de confirmación de reserva al cliente
+ */
+async function enviarNotificacionConfirmacion(datos: {
+  nombreCliente: string
+  emailCliente: string
+  cotizacionId: number
+  salon: string
+  fecha: string
+  hora: string
+  duracion: number
+  valorTotal: number
+  montoPagado: number
+  estadoPago: string
+}): Promise<boolean> {
+  try {
+    const fechaLegible = formatearFechaLegible(datos.fecha)
+    const valorFormateado = formatearPrecio(datos.valorTotal)
+    const montoFormateado = formatearPrecio(datos.montoPagado)
+    const saldoPendiente = datos.valorTotal - datos.montoPagado
+    const saldoFormateado = formatearPrecio(saldoPendiente)
+
+    const html = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Reserva Confirmada</title>
+      </head>
+      <body style="margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: ${COLORS.lightGray};">
+        <table role="presentation" style="width: 100%; border-collapse: collapse;">
+          <tr>
+            <td style="padding: 40px 20px;">
+              <table role="presentation" style="max-width: 600px; margin: 0 auto; background-color: ${COLORS.white}; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+                <!-- Header -->
+                <tr>
+                  <td style="background: linear-gradient(135deg, ${COLORS.primary} 0%, ${COLORS.primaryDark} 100%); padding: 40px 30px; text-align: center;">
+                    <h1 style="margin: 0; color: ${COLORS.white}; font-size: 28px; font-weight: 700;">
+                      ✅ ¡Reserva Confirmada!
+                    </h1>
+                    <p style="margin: 10px 0 0 0; color: rgba(255,255,255,0.9); font-size: 16px;">
+                      Su cotización ha sido aceptada
+                    </p>
+                  </td>
+                </tr>
+
+                <!-- Content -->
+                <tr>
+                  <td style="padding: 40px 30px;">
+                    <p style="margin: 0 0 20px 0; color: ${COLORS.darkGray}; font-size: 16px; line-height: 1.6;">
+                      Estimado/a <strong>${datos.nombreCliente}</strong>,
+                    </p>
+                    <p style="margin: 0 0 30px 0; color: ${COLORS.textGray}; font-size: 15px; line-height: 1.6;">
+                      Nos complace informarle que su cotización <strong>#${datos.cotizacionId}</strong> ha sido <strong>confirmada como reserva</strong>.
+                    </p>
+
+                    <!-- Info Card -->
+                    <div style="background-color: ${COLORS.lightGray}; border-radius: 12px; padding: 24px; margin-bottom: 24px; border-left: 4px solid ${COLORS.primary};">
+                      <h3 style="margin: 0 0 16px 0; color: ${COLORS.primary}; font-size: 18px; font-weight: 600;">
+                        📋 Detalles de la Reserva
+                      </h3>
+                      <table style="width: 100%; border-collapse: collapse;">
+                        <tr>
+                          <td style="padding: 8px 0; color: ${COLORS.textGray}; font-size: 14px;">🏛️ Salón:</td>
+                          <td style="padding: 8px 0; color: ${COLORS.darkGray}; font-size: 14px; font-weight: 600; text-align: right;">${datos.salon}</td>
+                        </tr>
+                        <tr>
+                          <td style="padding: 8px 0; color: ${COLORS.textGray}; font-size: 14px;">📅 Fecha:</td>
+                          <td style="padding: 8px 0; color: ${COLORS.darkGray}; font-size: 14px; font-weight: 600; text-align: right;">${fechaLegible}</td>
+                        </tr>
+                        <tr>
+                          <td style="padding: 8px 0; color: ${COLORS.textGray}; font-size: 14px;">🕐 Hora:</td>
+                          <td style="padding: 8px 0; color: ${COLORS.darkGray}; font-size: 14px; font-weight: 600; text-align: right;">${datos.hora}</td>
+                        </tr>
+                        <tr>
+                          <td style="padding: 8px 0; color: ${COLORS.textGray}; font-size: 14px;">⏱️ Duración:</td>
+                          <td style="padding: 8px 0; color: ${COLORS.darkGray}; font-size: 14px; font-weight: 600; text-align: right;">${datos.duracion} horas</td>
+                        </tr>
+                      </table>
+                    </div>
+
+                    <!-- Payment Info -->
+                    <div style="background-color: #f0fdf4; border-radius: 12px; padding: 24px; margin-bottom: 24px; border-left: 4px solid #22c55e;">
+                      <h3 style="margin: 0 0 16px 0; color: #16a34a; font-size: 18px; font-weight: 600;">
+                        💳 Estado de Pago
+                      </h3>
+                      <table style="width: 100%; border-collapse: collapse;">
+                        <tr>
+                          <td style="padding: 8px 0; color: ${COLORS.textGray}; font-size: 14px;">Valor Total:</td>
+                          <td style="padding: 8px 0; color: ${COLORS.darkGray}; font-size: 14px; font-weight: 600; text-align: right;">${valorFormateado}</td>
+                        </tr>
+                        <tr>
+                          <td style="padding: 8px 0; color: ${COLORS.textGray}; font-size: 14px;">Monto Pagado:</td>
+                          <td style="padding: 8px 0; color: #16a34a; font-size: 14px; font-weight: 600; text-align: right;">${montoFormateado}</td>
+                        </tr>
+                        ${saldoPendiente > 0 ? `
+                        <tr style="border-top: 1px solid #e5e7eb;">
+                          <td style="padding: 12px 0 0 0; color: ${COLORS.darkGray}; font-size: 15px; font-weight: 600;">Saldo Pendiente:</td>
+                          <td style="padding: 12px 0 0 0; color: #f59e0b; font-size: 16px; font-weight: 700; text-align: right;">${saldoFormateado}</td>
+                        </tr>
+                        ` : `
+                        <tr style="border-top: 1px solid #e5e7eb;">
+                          <td colspan="2" style="padding: 12px 0 0 0; color: #16a34a; font-size: 14px; font-weight: 600; text-align: center;">✅ Pagado Completamente</td>
+                        </tr>
+                        `}
+                      </table>
+                    </div>
+
+                    ${saldoPendiente > 0 ? `
+                    <div style="background-color: #fffbeb; border-radius: 12px; padding: 20px; margin-bottom: 24px; border-left: 4px solid #f59e0b;">
+                      <p style="margin: 0; color: #92400e; font-size: 14px; line-height: 1.6;">
+                        ⚠️ <strong>Recordatorio:</strong> Le queda un saldo pendiente de <strong>${saldoFormateado}</strong> que debe cancelar antes del día del evento.
+                      </p>
+                    </div>
+                    ` : ''}
+
+                    <p style="margin: 0 0 20px 0; color: ${COLORS.textGray}; font-size: 15px; line-height: 1.6;">
+                      Su fecha y hora han sido <strong>bloqueadas en nuestro calendario</strong>. Puede estar tranquilo/a, su evento está confirmado.
+                    </p>
+
+                    <p style="margin: 0; color: ${COLORS.textGray}; font-size: 15px; line-height: 1.6;">
+                      Si tiene alguna pregunta, no dude en contactarnos.
+                    </p>
+                  </td>
+                </tr>
+
+                <!-- Footer -->
+                <tr>
+                  <td style="background-color: ${COLORS.lightGray}; padding: 30px; text-align: center; border-top: 1px solid ${COLORS.border};">
+                    <p style="margin: 0 0 10px 0; color: ${COLORS.textGray}; font-size: 13px;">
+                      Club El Meta - Salones de Eventos
+                    </p>
+                    <p style="margin: 0; color: ${COLORS.textGray}; font-size: 12px;">
+                      Este correo fue generado automáticamente. No responder.
+                    </p>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+        </table>
+      </body>
+      </html>
+    `
+
+    await resend.emails.send({
+      from: FROM_EMAIL,
+      to: [datos.emailCliente],
+      subject: `✅ Reserva Confirmada #${datos.cotizacionId} - ${datos.salon}`,
+      html,
+    })
+
+    return true
+  } catch (error: any) {
+    console.error('Error enviando notificación de confirmación:', error)
+    return false
+  }
+}
+
+/**
+ * Enviar notificación de cancelación al cliente
+ */
+async function enviarNotificacionCancelacion(datos: {
+  nombreCliente: string
+  emailCliente: string
+  cotizacionId: number
+  salon: string
+  fecha: string
+  hora: string
+  motivo: string
+  tipoRechazo: 'manual' | 'automatico'
+}): Promise<boolean> {
+  try {
+    const fechaLegible = formatearFechaLegible(datos.fecha)
+    const esAutomatico = datos.tipoRechazo === 'automatico'
+
+    const html = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Cotización ${esAutomatico ? 'Cancelada' : 'Rechazada'}</title>
+      </head>
+      <body style="margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: ${COLORS.lightGray};">
+        <table role="presentation" style="width: 100%; border-collapse: collapse;">
+          <tr>
+            <td style="padding: 40px 20px;">
+              <table role="presentation" style="max-width: 600px; margin: 0 auto; background-color: ${COLORS.white}; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+                <!-- Header -->
+                <tr>
+                  <td style="background: linear-gradient(135deg, #dc2626 0%, #991b1b 100%); padding: 40px 30px; text-align: center;">
+                    <h1 style="margin: 0; color: ${COLORS.white}; font-size: 28px; font-weight: 700;">
+                      ❌ Cotización ${esAutomatico ? 'Cancelada' : 'Rechazada'}
+                    </h1>
+                    <p style="margin: 10px 0 0 0; color: rgba(255,255,255,0.9); font-size: 16px;">
+                      Cotización #${datos.cotizacionId}
+                    </p>
+                  </td>
+                </tr>
+
+                <!-- Content -->
+                <tr>
+                  <td style="padding: 40px 30px;">
+                    <p style="margin: 0 0 20px 0; color: ${COLORS.darkGray}; font-size: 16px; line-height: 1.6;">
+                      Estimado/a <strong>${datos.nombreCliente}</strong>,
+                    </p>
+                    <p style="margin: 0 0 30px 0; color: ${COLORS.textGray}; font-size: 15px; line-height: 1.6;">
+                      ${esAutomatico 
+                        ? 'Lamentablemente, su cotización ha sido <strong>cancelada automáticamente</strong> debido a que otra reserva fue confirmada en el mismo horario.'
+                        : 'Lamentamos informarle que su cotización ha sido <strong>rechazada</strong>.'
+                      }
+                    </p>
+
+                    <!-- Info Card -->
+                    <div style="background-color: ${COLORS.lightGray}; border-radius: 12px; padding: 24px; margin-bottom: 24px; border-left: 4px solid #dc2626;">
+                      <h3 style="margin: 0 0 16px 0; color: #dc2626; font-size: 18px; font-weight: 600;">
+                        📋 Detalles de la Cotización
+                      </h3>
+                      <table style="width: 100%; border-collapse: collapse;">
+                        <tr>
+                          <td style="padding: 8px 0; color: ${COLORS.textGray}; font-size: 14px;">🏛️ Salón:</td>
+                          <td style="padding: 8px 0; color: ${COLORS.darkGray}; font-size: 14px; font-weight: 600; text-align: right;">${datos.salon}</td>
+                        </tr>
+                        <tr>
+                          <td style="padding: 8px 0; color: ${COLORS.textGray}; font-size: 14px;">📅 Fecha:</td>
+                          <td style="padding: 8px 0; color: ${COLORS.darkGray}; font-size: 14px; font-weight: 600; text-align: right;">${fechaLegible}</td>
+                        </tr>
+                        <tr>
+                          <td style="padding: 8px 0; color: ${COLORS.textGray}; font-size: 14px;">🕐 Hora:</td>
+                          <td style="padding: 8px 0; color: ${COLORS.darkGray}; font-size: 14px; font-weight: 600; text-align: right;">${datos.hora}</td>
+                        </tr>
+                      </table>
+                    </div>
+
+                    <!-- Reason -->
+                    <div style="background-color: #fef2f2; border-radius: 12px; padding: 20px; margin-bottom: 24px; border-left: 4px solid #dc2626;">
+                      <h3 style="margin: 0 0 12px 0; color: #991b1b; font-size: 16px; font-weight: 600;">
+                        ${esAutomatico ? '🔄 Razón' : '📝 Motivo'}
+                      </h3>
+                      <p style="margin: 0; color: #7f1d1d; font-size: 14px; line-height: 1.6;">
+                        ${datos.motivo}
+                      </p>
+                    </div>
+
+                    <p style="margin: 0 0 20px 0; color: ${COLORS.textGray}; font-size: 15px; line-height: 1.6;">
+                      ${esAutomatico
+                        ? 'Le invitamos a realizar una nueva cotización para una fecha diferente u horario alternativo.'
+                        : 'Si desea más información o explorar otras opciones, no dude en contactarnos.'
+                      }
+                    </p>
+
+                    <p style="margin: 0; color: ${COLORS.textGray}; font-size: 15px; line-height: 1.6;">
+                      Agradecemos su interés en nuestros servicios.
+                    </p>
+                  </td>
+                </tr>
+
+                <!-- Footer -->
+                <tr>
+                  <td style="background-color: ${COLORS.lightGray}; padding: 30px; text-align: center; border-top: 1px solid ${COLORS.border};">
+                    <p style="margin: 0 0 10px 0; color: ${COLORS.textGray}; font-size: 13px;">
+                      Club El Meta - Salones de Eventos
+                    </p>
+                    <p style="margin: 0; color: ${COLORS.textGray}; font-size: 12px;">
+                      Este correo fue generado automáticamente. No responder.
+                    </p>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+        </table>
+      </body>
+      </html>
+    `
+
+    await resend.emails.send({
+      from: FROM_EMAIL,
+      to: [datos.emailCliente],
+      subject: `${esAutomatico ? '❌ Cotización Cancelada' : '❌ Cotización Rechazada'} #${datos.cotizacionId}`,
+      html,
+    })
+
+    return true
+  } catch (error: any) {
+    console.error('Error enviando notificación de cancelación:', error)
+    return false
+  }
+}
+
+/**
+ * Enviar notificaciones de cancelación en batch (hasta 100 emails)
+ */
+async function enviarNotificacionesCancelacionBatch(
+  cotizaciones: Array<{
+    nombreCliente: string
+    emailCliente: string
+    cotizacionId: number
+    salon: string
+    fecha: string
+    hora: string
+    motivo: string
+    tipoRechazo: 'manual' | 'automatico'
+  }>
+): Promise<{ success: number; failed: number }> {
+  try {
+    if (cotizaciones.length === 0) {
+      return { success: 0, failed: 0 }
+    }
+
+    // Resend permite hasta 100 emails por batch
+    const batchSize = 100
+    let totalSuccess = 0
+    let totalFailed = 0
+
+    for (let i = 0; i < cotizaciones.length; i += batchSize) {
+      const batch = cotizaciones.slice(i, i + batchSize)
+
+      const emails = batch.map((datos) => {
+        const fechaLegible = formatearFechaLegible(datos.fecha)
+        const esAutomatico = datos.tipoRechazo === 'automatico'
+
+        const html = `
+          <!DOCTYPE html>
+          <html>
+          <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>Cotización ${esAutomatico ? 'Cancelada' : 'Rechazada'}</title>
+          </head>
+          <body style="margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: ${COLORS.lightGray};">
+            <table role="presentation" style="width: 100%; border-collapse: collapse;">
+              <tr>
+                <td style="padding: 40px 20px;">
+                  <table role="presentation" style="max-width: 600px; margin: 0 auto; background-color: ${COLORS.white}; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+                    <tr>
+                      <td style="background: linear-gradient(135deg, #dc2626 0%, #991b1b 100%); padding: 40px 30px; text-align: center;">
+                        <h1 style="margin: 0; color: ${COLORS.white}; font-size: 28px; font-weight: 700;">
+                          ❌ Cotización ${esAutomatico ? 'Cancelada' : 'Rechazada'}
+                        </h1>
+                        <p style="margin: 10px 0 0 0; color: rgba(255,255,255,0.9); font-size: 16px;">
+                          Cotización #${datos.cotizacionId}
+                        </p>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td style="padding: 40px 30px;">
+                        <p style="margin: 0 0 20px 0; color: ${COLORS.darkGray}; font-size: 16px; line-height: 1.6;">
+                          Estimado/a <strong>${datos.nombreCliente}</strong>,
+                        </p>
+                        <p style="margin: 0 0 30px 0; color: ${COLORS.textGray}; font-size: 15px; line-height: 1.6;">
+                          ${
+                            esAutomatico
+                              ? 'Lamentablemente, su cotización ha sido <strong>cancelada automáticamente</strong> debido a que otra reserva fue confirmada en el mismo horario.'
+                              : 'Lamentamos informarle que su cotización ha sido <strong>rechazada</strong>.'
+                          }
+                        </p>
+                        <div style="background-color: ${COLORS.lightGray}; border-radius: 12px; padding: 24px; margin-bottom: 24px; border-left: 4px solid #dc2626;">
+                          <h3 style="margin: 0 0 16px 0; color: #dc2626; font-size: 18px; font-weight: 600;">
+                            📋 Detalles de la Cotización
+                          </h3>
+                          <table style="width: 100%; border-collapse: collapse;">
+                            <tr>
+                              <td style="padding: 8px 0; color: ${COLORS.textGray}; font-size: 14px;">🏛️ Salón:</td>
+                              <td style="padding: 8px 0; color: ${COLORS.darkGray}; font-size: 14px; font-weight: 600; text-align: right;">${datos.salon}</td>
+                            </tr>
+                            <tr>
+                              <td style="padding: 8px 0; color: ${COLORS.textGray}; font-size: 14px;">📅 Fecha:</td>
+                              <td style="padding: 8px 0; color: ${COLORS.darkGray}; font-size: 14px; font-weight: 600; text-align: right;">${fechaLegible}</td>
+                            </tr>
+                            <tr>
+                              <td style="padding: 8px 0; color: ${COLORS.textGray}; font-size: 14px;">🕐 Hora:</td>
+                              <td style="padding: 8px 0; color: ${COLORS.darkGray}; font-size: 14px; font-weight: 600; text-align: right;">${datos.hora}</td>
+                            </tr>
+                          </table>
+                        </div>
+                        <div style="background-color: #fef2f2; border-radius: 12px; padding: 20px; margin-bottom: 24px; border-left: 4px solid #dc2626;">
+                          <h3 style="margin: 0 0 12px 0; color: #991b1b; font-size: 16px; font-weight: 600;">
+                            ${esAutomatico ? '🔄 Razón' : '📝 Motivo'}
+                          </h3>
+                          <p style="margin: 0; color: #7f1d1d; font-size: 14px; line-height: 1.6;">
+                            ${datos.motivo}
+                          </p>
+                        </div>
+                        <p style="margin: 0 0 20px 0; color: ${COLORS.textGray}; font-size: 15px; line-height: 1.6;">
+                          ${
+                            esAutomatico
+                              ? 'Le invitamos a realizar una nueva cotización para una fecha diferente u horario alternativo.'
+                              : 'Si desea más información o explorar otras opciones, no dude en contactarnos.'
+                          }
+                        </p>
+                        <p style="margin: 0; color: ${COLORS.textGray}; font-size: 15px; line-height: 1.6;">
+                          Agradecemos su interés en nuestros servicios.
+                        </p>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td style="background-color: ${COLORS.lightGray}; padding: 30px; text-align: center; border-top: 1px solid ${COLORS.border};">
+                        <p style="margin: 0 0 10px 0; color: ${COLORS.textGray}; font-size: 13px;">
+                          Club El Meta - Salones de Eventos
+                        </p>
+                        <p style="margin: 0; color: ${COLORS.textGray}; font-size: 12px;">
+                          Este correo fue generado automáticamente. No responder.
+                        </p>
+                      </td>
+                    </tr>
+                  </table>
+                </td>
+              </tr>
+            </table>
+          </body>
+          </html>
+        `
+
+        return {
+          from: FROM_EMAIL,
+          to: [datos.emailCliente],
+          subject: `${esAutomatico ? '❌ Cotización Cancelada' : '❌ Cotización Rechazada'} #${datos.cotizacionId}`,
+          html,
+        }
+      })
+
+      try {
+        await resend.batch.send(emails)
+        totalSuccess += emails.length
+      } catch (error: any) {
+        console.error(`Error enviando batch de ${emails.length} emails:`, error)
+        totalFailed += emails.length
+      }
+    }
+
+    return { success: totalSuccess, failed: totalFailed }
+  } catch (error: any) {
+    console.error('Error en enviarNotificacionesCancelacionBatch:', error)
+    return { success: 0, failed: cotizaciones.length }
+  }
+}
+
 export const EmailService = {
   enviarCorreosCotizacion,
+  enviarNotificacionConfirmacion,
+  enviarNotificacionCancelacion,
+  enviarNotificacionesCancelacionBatch,
 }

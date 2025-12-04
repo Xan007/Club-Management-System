@@ -32,14 +32,19 @@ router.get('/admin/stats', [AdminController, 'stats']).use(middleware.auth()).us
 router.post('/admin/config/update', [AdminController, 'updateConfig']).use(middleware.auth()).use(middleware.checkRole('admin'))
 router.get('/admin/usuarios', [AdminController, 'listUsuarios']).use(middleware.auth()).use(middleware.checkRole('admin'))
 
+// Disponibilidad routes
+const DisponibilidadController = () => import('#controllers/disponibilidad_controller')
+router.get('/api/disponibilidad/horas', [DisponibilidadController, 'obtenerHorasDisponibles'])
+
 // Cotizaciones routes
 const CotizacionController = () => import('#controllers/cotizacion_controller')
-router.get('/api/cotizaciones/disponibilidad', [CotizacionController, 'obtenerDisponibilidad'])
 router.post('/api/cotizaciones', [CotizacionController, 'crearCotizacion'])
 router.get('/api/cotizaciones', [CotizacionController, 'listarCotizaciones'])
 router.get('/api/cotizaciones/:id', [CotizacionController, 'mostrarCotizacion'])
-router.post('/api/cotizaciones/:id/confirmar', [CotizacionController, 'confirmarCotizacion'])
-router.post('/api/cotizaciones/:id/pago', [CotizacionController, 'registrarPago'])
+router.put('/api/cotizaciones/:id', [CotizacionController, 'actualizarCotizacion'])
+router.post('/api/cotizaciones/:id/cerrar', [CotizacionController, 'cerrarCotizacion'])
+router.post('/api/cotizaciones/:id/rechazar', [CotizacionController, 'rechazarCotizacion'])
+router.post('/api/cotizaciones/:id/registrar-pago', [CotizacionController, 'registrarPagoAdicional'])
 router.get('/api/cotizaciones/:id/pdf', [CotizacionController, 'descargarPDF'])
 router.post('/api/cotizaciones/:id/enviar-correo', [CotizacionController, 'enviarCorreoPrueba'])
 
