@@ -99,10 +99,17 @@ const espacios = [
               </div>
             </div>
 
-            <div class="field">
-              <label for="duration">Duración (horas) * - Mínimo 4h, Máximo 8h</label>
-              <input id="duration" name="duration" type="number" min="4" max="8" value="4" required />
-              <small>Las horas adicionales a 8 se cobran por separado</small>
+            <div class="field grid-2">
+              <div>
+                <label for="duration">Duración (horas) * - Mínimo 4h, Máximo 8h</label>
+                <input id="duration" name="duration" type="number" min="4" max="8" value="4" required />
+                <small>Las horas adicionales a 8 se cobran por separado</small>
+              </div>
+              <div>
+                <label>Hora Final</label>
+                <input id="hora-final" type="text" readonly disabled style="background: #f3f4f6; color: #6b7280; cursor: not-allowed;" value="Selecciona hora de inicio" />
+                <small id="duracion-info" style="display: none; margin-top: 0.5rem; font-size: 0.875rem; color: #10b981;"></small>
+              </div>
             </div>
           </div>
 
@@ -707,15 +714,31 @@ const espacios = [
     function configurarRestriccionesFecha() {
       const dateInput = document.getElementById('date')
       const hoy = new Date()
-      hoy.setHours(0, 0, 0, 0)
+      
+      // Obtener fecha local en formato YYYY-MM-DD sin conversión a UTC
+      const year = hoy.getFullYear()
+      const month = String(hoy.getMonth() + 1).padStart(2, '0')
+      const day = String(hoy.getDate()).padStart(2, '0')
+      const fechaHoyLocal = `${year}-${month}-${day}`
       
       // Fecha mínima (hoy o mañana)
-      const fechaMinima = PERMITIR_HOY ? hoy : new Date(hoy.getTime() + 86400000)
-      const minDate = fechaMinima.toISOString().split('T')[0]
+      let minDate = fechaHoyLocal
+      if (!PERMITIR_HOY) {
+        const manana = new Date(hoy)
+        manana.setDate(manana.getDate() + 1)
+        const yearM = manana.getFullYear()
+        const monthM = String(manana.getMonth() + 1).padStart(2, '0')
+        const dayM = String(manana.getDate()).padStart(2, '0')
+        minDate = `${yearM}-${monthM}-${dayM}`
+      }
       
       // Fecha máxima (hoy + DIAS_MAXIMO_FUTURO)
-      const fechaMaxima = new Date(hoy.getTime() + (DIAS_MAXIMO_FUTURO * 86400000))
-      const maxDate = fechaMaxima.toISOString().split('T')[0]
+      const fechaMax = new Date(hoy)
+      fechaMax.setDate(fechaMax.getDate() + DIAS_MAXIMO_FUTURO)
+      const yearMax = fechaMax.getFullYear()
+      const monthMax = String(fechaMax.getMonth() + 1).padStart(2, '0')
+      const dayMax = String(fechaMax.getDate()).padStart(2, '0')
+      const maxDate = `${yearMax}-${monthMax}-${dayMax}`
       
       dateInput.setAttribute('min', minDate)
       dateInput.setAttribute('max', maxDate)
@@ -726,15 +749,15 @@ const espacios = [
     // Aplicar restricciones al cargar
     configurarRestriccionesFecha()
 
-    // Horarios de operación
+    // Horarios de operación (formato 24 horas)
     const horarios = {
       0: { nombre: 'Domingo', activo: false, inicio: '—', fin: '—' },
       1: { nombre: 'Lunes', activo: false, inicio: '—', fin: '—' },
       2: { nombre: 'Martes', activo: true, inicio: '08:00', fin: '22:00' },
       3: { nombre: 'Miércoles', activo: true, inicio: '08:00', fin: '22:00' },
       4: { nombre: 'Jueves', activo: true, inicio: '08:00', fin: '22:00' },
-      5: { nombre: 'Viernes', activo: true, inicio: '08:00', fin: '02:00' },
-      6: { nombre: 'Sábado', activo: true, inicio: '08:00', fin: '02:00' }
+      5: { nombre: 'Viernes', activo: true, inicio: '08:00', fin: '02:00' }, // 02:00 = 2 AM (mañana siguiente)
+      6: { nombre: 'Sábado', activo: true, inicio: '08:00', fin: '02:00' }  // 02:00 = 2 AM (mañana siguiente)
     }
 
     // CARGAR DISPOSICIONES DEL ESPACIO
@@ -879,7 +902,7 @@ const espacios = [
           timeSelect.innerHTML = html
           timeSelect.disabled = false
           
-          horasInfo.textContent = `✓ ${horas.length} horarios disponibles (slots de 1 hora)`
+          horasInfo.textContent = `✓ ${horas.length} horarios disponibles`
           horasInfo.style.display = 'block'
           horasInfo.style.color = '#10b981'
           console.log(`✅ ${horas.length} horas disponibles cargadas`)
@@ -947,7 +970,10 @@ const espacios = [
       
       if (horario) {
         if (horario.activo) {
-          horarioInfo.innerHTML = `<strong>📅 ${horario.nombre}</strong> - Horario: ${horario.inicio} a ${horario.fin}`
+          // Formato 24 horas explícito
+          const horaInicioTexto = horario.inicio
+          const horaFinTexto = horario.fin === '02:00' ? '02:00 mañana siguiente' : horario.fin
+          horarioInfo.innerHTML = `<strong>📅 ${horario.nombre}</strong> - Horario: ${horaInicioTexto} a ${horaFinTexto}`
           horarioInfo.style.background = '#ecfdf5'
           horarioInfo.style.borderLeftColor = '#10b981'
           horarioInfo.style.color = '#065f46'
@@ -978,18 +1004,94 @@ const espacios = [
       }
     })
 
-    // EVENT: CAMBIO DE DURACIÓN - RECARGAR HORAS DISPONIBLES
+    // CALCULAR Y MOSTRAR HORA FINAL
+    function calcularHoraFinal() {
+      const timeSelect = document.getElementById('time')
+      const durationInput = document.getElementById('duration')
+      const horaFinalInput = document.getElementById('hora-final')
+      const duracionInfo = document.getElementById('duracion-info')
+      
+      // Limpiar si no hay hora de inicio
+      if (!timeSelect.value || timeSelect.value === '' || !durationInput.value) {
+        horaFinalInput.value = 'Selecciona hora de inicio'
+        duracionInfo.style.display = 'none'
+        return
+      }
+      
+      const horaInicio = timeSelect.value // formato "HH:mm"
+      const duracion = parseInt(durationInput.value)
+      
+      // Parsear hora de inicio
+      const [horas, minutos] = horaInicio.split(':').map(Number)
+      
+      // Calcular hora final
+      let horaFinal = horas + duracion
+      const minutosFinal = minutos
+      
+      // Ajustar si pasa de 24 horas
+      if (horaFinal >= 24) {
+        horaFinal = horaFinal - 24
+      }
+      
+      // Formatear hora final
+      const horaFinalStr = `${String(horaFinal).padStart(2, '0')}:${String(minutosFinal).padStart(2, '0')}`
+      
+      horaFinalInput.value = horaFinalStr
+      duracionInfo.style.display = 'none'
+      
+      console.log(`📅 Hora calculada: ${horaInicio} + ${duracion}h = ${horaFinalStr}`)
+    }
+
+    // EVENT: CAMBIO DE DURACIÓN - RECARGAR HORAS DISPONIBLES Y RECALCULAR HORA FINAL
     const durationInput = document.getElementById('duration')
     durationInput.addEventListener('change', async () => {
       const salonSelect = document.getElementById('salon')
       const dateInput = document.getElementById('date')
+      const timeSelect = document.getElementById('time')
+      
+      // Validar mínimo 4 horas
+      const duracionValue = parseInt(durationInput.value)
+      if (duracionValue < 4) {
+        alert('La duración mínima es de 4 horas')
+        durationInput.value = 4
+        return
+      }
+      
+      // Validar máximo 8 horas para clientes
+      if (duracionValue > 8) {
+        alert('La duración máxima para clientes es de 8 horas. Horas adicionales se cobran por separado.')
+        durationInput.value = 8
+        return
+      }
+      
+      // Guardar la hora de inicio seleccionada antes de recargar
+      const horaInicioPrevia = timeSelect.value
+      
+      // Recalcular hora final con la nueva duración
+      calcularHoraFinal()
       
       // Solo recargar si ya hay salón y fecha seleccionados
       if (salonSelect.value && dateInput.value) {
         const salonData = JSON.parse(salonSelect.value)
         const duracion = durationInput.value ? parseInt(durationInput.value) : 4
         await cargarHorasDisponibles(salonData.id, dateInput.value, duracion)
+        
+        // Restaurar la hora de inicio si sigue siendo válida en las nuevas opciones
+        if (horaInicioPrevia) {
+          // Verificar si la hora previa existe en las nuevas opciones
+          const options = Array.from(timeSelect.options).map(opt => opt.value)
+          if (options.includes(horaInicioPrevia)) {
+            timeSelect.value = horaInicioPrevia
+            calcularHoraFinal() // Recalcular con la hora restaurada
+          }
+        }
       }
+    })
+
+    // EVENT: CAMBIO DE HORA DE INICIO - CALCULAR HORA FINAL
+    const timeSelect = document.getElementById('time')
+    timeSelect.addEventListener('change', () => {
+      calcularHoraFinal()
     })
 
     // EVENT: VALIDAR ASISTENTES

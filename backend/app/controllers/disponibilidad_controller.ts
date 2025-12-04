@@ -52,12 +52,19 @@ export default class DisponibilidadController {
       }
 
       // Generar slots de 1 hora desde hora_inicio hasta hora_fin
-      const horaInicio = DateTime.fromFormat(horario.horaInicio, 'HH:mm:ss', {
+      let horaInicio = DateTime.fromFormat(horario.horaInicio, 'HH:mm:ss', {
         zone: 'America/Bogota',
       })
-      const horaFin = DateTime.fromFormat(horario.horaFin, 'HH:mm:ss', {
+      let horaFin = DateTime.fromFormat(horario.horaFin, 'HH:mm:ss', {
         zone: 'America/Bogota',
       })
+
+      // Si hora_fin es menor que hora_inicio, significa que cruza medianoche
+      // Ejemplo: 08:00 a 02:00 (viernes/sábado que cierra a las 2 AM del sábado/domingo)
+      if (horaFin.hour < horaInicio.hour) {
+        // Ajustar horaFin al día siguiente
+        horaFin = horaFin.plus({ days: 1 })
+      }
 
       // Calcular la última hora válida de inicio basada en la duración
       // Si cierra a 22:00 y necesitan 4h, última hora de inicio = 18:00
