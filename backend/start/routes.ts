@@ -54,6 +54,9 @@ router.get('/admin/horarios', [HorariosController, 'index']).use(middleware.auth
 router.post('/admin/horarios', [HorariosController, 'crear']).use(middleware.auth()).use(middleware.checkRole('admin'))
 router.get('/admin/horarios/:id', [HorariosController, 'mostrar']).use(middleware.auth()).use(middleware.checkRole('admin'))
 router.put('/admin/horarios/:id', [HorariosController, 'actualizar']).use(middleware.auth()).use(middleware.checkRole('admin'))
+router.put('/admin/horarios/:id/horarios', [HorariosController, 'actualizarHorarios']).use(middleware.auth()).use(middleware.checkRole('admin'))
+router.post('/admin/horarios/:id/activar', [HorariosController, 'activar']).use(middleware.auth()).use(middleware.checkRole('admin'))
+router.post('/admin/horarios/:id/desactivar', [HorariosController, 'desactivar']).use(middleware.auth()).use(middleware.checkRole('admin'))
 router.delete('/admin/horarios/:id', [HorariosController, 'eliminar']).use(middleware.auth()).use(middleware.checkRole('admin'))
 
 // Plantillas PDF routes (admin)
@@ -100,6 +103,21 @@ router.get('/admin/salon-posts/:id', [SalonPostsController, 'showAdmin']).use(mi
 router.put('/admin/salon-posts/:id', [SalonPostsController, 'update']).use(middleware.auth()).use(middleware.checkRole('admin'))
 router.delete('/admin/salon-posts/:id', [SalonPostsController, 'destroy']).use(middleware.auth()).use(middleware.checkRole('admin'))
 router.post('/admin/salon-posts/:id/publish', [SalonPostsController, 'publish']).use(middleware.auth()).use(middleware.checkRole('admin'))
+
+// Espacios Admin routes
+const EspaciosAdminController = () => import('#controllers/espacios_admin_controller')
+router.get('/admin/espacios', [EspaciosAdminController, 'listarEspacios']).use(middleware.auth()).use(middleware.checkRole('admin'))
+router.get('/admin/espacios/:id', [EspaciosAdminController, 'obtenerEspacio']).use(middleware.auth()).use(middleware.checkRole('admin'))
+router.post('/admin/espacios', [EspaciosAdminController, 'crearEspacio']).use(middleware.auth()).use(middleware.checkRole('admin'))
+router.put('/admin/espacios/:id', [EspaciosAdminController, 'actualizarEspacio']).use(middleware.auth()).use(middleware.checkRole('admin'))
+router.post('/admin/espacios/:id/configuraciones', [EspaciosAdminController, 'agregarConfiguracion']).use(middleware.auth()).use(middleware.checkRole('admin'))
+router.put('/admin/espacios/:id/configuraciones/:configId', [EspaciosAdminController, 'actualizarConfiguracion']).use(middleware.auth()).use(middleware.checkRole('admin'))
+router.delete('/admin/espacios/:id/configuraciones/:configId', [EspaciosAdminController, 'eliminarConfiguracion']).use(middleware.auth()).use(middleware.checkRole('admin'))
+
+// Disposiciones Admin routes
+router.get('/admin/disposiciones', [EspaciosAdminController, 'listarDisposiciones']).use(middleware.auth()).use(middleware.checkRole('admin'))
+router.post('/admin/disposiciones', [EspaciosAdminController, 'crearDisposicion']).use(middleware.auth()).use(middleware.checkRole('admin'))
+router.put('/admin/disposiciones/:id', [EspaciosAdminController, 'actualizarDisposicion']).use(middleware.auth()).use(middleware.checkRole('admin'))
 
 // --- API Docs ---
 // Sirve el OpenAPI spec en JSON generado desde archivos "solo-docs"

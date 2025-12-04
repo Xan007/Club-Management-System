@@ -140,21 +140,59 @@ export default class CotizacionController {
   }
 
   /**
-   * Listar cotizaciones (admin: todas, usuario: propias)
+   * Listar cotizaciones con filtros avanzados
    */
   async listarCotizaciones({ request, response }: HttpContext) {
     try {
-      const { estado, email, fecha_desde, fecha_hasta } = request.qs()
-      let query = Cotizacion.query()
+      const {
+        estado,
+        estado_pago,
+        email,
+        fecha,
+        fecha_desde,
+        fecha_hasta,
+        hora_desde,
+        hora_hasta,
+        espacio_id,
+        tipo_evento,
+        buscar,
+        limit = 100,
+        page = 1,
+      } = request.qs()
 
+      let query = Cotizacion.query().preload('espacio')
+
+      // Filtro por email del cliente
       if (email) {
-        query = query.where('email', email)
+        query = query.where('email', 'like', `%${email}%`)
       }
 
+      // Filtro por nombre del cliente (búsqueda)
+      if (buscar) {
+        query = query.where((builder) => {
+          builder
+            .where('nombre', 'like', `%${buscar}%`)
+            .orWhere('email', 'like', `%${buscar}%`)
+            .orWhere('telefono', 'like', `%${buscar}%`)
+        })
+      }
+
+      // Filtro por estado (pendiente, aceptada, rechazada, cancelada, expirada)
       if (estado) {
         query = query.where('estado', estado)
       }
 
+      // Filtro por estado de pago (pendiente, abonado, pagado)
+      if (estado_pago) {
+        query = query.where('estado_pago', estado_pago)
+      }
+
+      // Filtro por fecha exacta
+      if (fecha) {
+        query = query.where('fecha', fecha)
+      }
+
+      // Filtro por rango de fechas
       if (fecha_desde) {
         query = query.whereRaw('DATE(fecha) >= ?', [fecha_desde])
       }
@@ -163,25 +201,86 @@ export default class CotizacionController {
         query = query.whereRaw('DATE(fecha) <= ?', [fecha_hasta])
       }
 
-      const cotizaciones = await query.orderBy('created_at', 'desc').limit(100)
+      // Filtro por rango de horas
+      if (hora_desde) {
+        query = query.where('hora', '>=', hora_desde)
+      }
+
+      if (hora_hasta) {
+        query = query.where('hora', '<=', hora_hasta)
+      }
+
+      // Filtro por espacio/salón
+      if (espacio_id) {
+        query = query.where('espacio_id', espacio_id)
+      }
+
+      // Filtro por tipo de evento
+      if (tipo_evento) {
+        query = query.where('tipo_evento', tipo_evento)
+      }
+
+      // Paginación
+      const limitNum = Math.min(parseInt(limit as string) || 100, 500)
+      const pageNum = Math.max(parseInt(page as string) || 1, 1)
+      const offset = (pageNum - 1) * limitNum
+
+      // Obtener total de registros
+      const totalQuery = query.clone()
+      const total = await totalQuery.count('* as total')
+      const totalRecords = Number(total[0]?.total || 0)
+
+      // Obtener cotizaciones con paginación
+      const cotizaciones = await query
+        .orderBy('fecha', 'desc')
+        .orderBy('hora', 'desc')
+        .orderBy('created_at', 'desc')
+        .limit(limitNum)
+        .offset(offset)
 
       return response.json({
         success: true,
         data: cotizaciones.map((c) => ({
           id: c.id,
           numero: c.cotizacionNumero,
-          cliente: c.nombre,
-          email: c.email,
-          fecha_evento: c.fecha,
-          tipo_evento: c.tipoEvento,
-          asistentes: c.asistentes,
-          total: c.valorTotal,
+          cliente: {
+            nombre: c.nombre,
+            email: c.email,
+            telefono: c.telefono,
+          },
+          evento: {
+            fecha: c.fecha,
+            hora: c.hora,
+            duracion: c.duracion,
+            asistentes: c.asistentes,
+            tipo: c.tipoEvento,
+            salon: c.espacio?.nombre || null,
+            espacio_id: c.espacioId,
+          },
+          totales: {
+            valor_total: c.valorTotal,
+            abono_requerido: c.calcularMontoAbono(),
+            total_pagado: c.montoPagado,
+            saldo_pendiente: typeof c.valorTotal === 'string' 
+              ? parseFloat(c.valorTotal) - (typeof c.montoPagado === 'string' ? parseFloat(c.montoPagado) : c.montoPagado)
+              : c.valorTotal - (typeof c.montoPagado === 'string' ? parseFloat(c.montoPagado) : c.montoPagado),
+          },
           estado: c.estadoLegible,
           estado_pago: c.estadoPagoLegible,
-          creado: c.createdAt,
+          fecha_creacion: c.createdAt,
+          fecha_actualizacion: c.updatedAt,
         })),
+        pagination: {
+          total: totalRecords,
+          per_page: limitNum,
+          current_page: pageNum,
+          last_page: Math.ceil(totalRecords / limitNum),
+          from: totalRecords > 0 ? offset + 1 : 0,
+          to: Math.min(offset + limitNum, totalRecords),
+        },
       })
-    } catch (error) {
+    } catch (error: any) {
+      console.error('Error listando cotizaciones:', error)
       return response.status(500).json({
         success: false,
         message: 'Error al listar cotizaciones',
