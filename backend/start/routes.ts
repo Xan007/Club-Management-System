@@ -82,6 +82,19 @@ router.get('/api/disposiciones', [EspacioController, 'listarDisposiciones'])
 router.get('/api/prestaciones', [EspacioController, 'listarPrestaciones'])
 router.get('/api/servicios-adicionales', [EspacioController, 'listarPrestaciones'])
 
+// Salon Posts (Blog) routes - públicas con cache
+const SalonPostsController = () => import('#controllers/salon_posts_controller')
+router.get('/api/salon-posts', [SalonPostsController, 'index'])
+router.get('/api/salon-posts/:slug', [SalonPostsController, 'show'])
+
+// Salon Posts (Blog) routes - admin
+router.get('/admin/salon-posts', [SalonPostsController, 'indexAdmin']).use(middleware.auth()).use(middleware.checkRole('admin'))
+router.post('/admin/salon-posts', [SalonPostsController, 'store']).use(middleware.auth()).use(middleware.checkRole('admin'))
+router.get('/admin/salon-posts/:id', [SalonPostsController, 'showAdmin']).use(middleware.auth()).use(middleware.checkRole('admin'))
+router.put('/admin/salon-posts/:id', [SalonPostsController, 'update']).use(middleware.auth()).use(middleware.checkRole('admin'))
+router.delete('/admin/salon-posts/:id', [SalonPostsController, 'destroy']).use(middleware.auth()).use(middleware.checkRole('admin'))
+router.post('/admin/salon-posts/:id/publish', [SalonPostsController, 'publish']).use(middleware.auth()).use(middleware.checkRole('admin'))
+
 // --- API Docs ---
 // Sirve el OpenAPI spec en JSON generado desde archivos "solo-docs"
 router.get('/openapi.json', async ({ response }) => {
