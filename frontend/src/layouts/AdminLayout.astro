@@ -1,7 +1,7 @@
 ---
 interface Props {
   title?: string
-  active?: 'reservas' | 'espacios' | 'login'
+  active?: 'reservas' | 'espacios' | 'reportes' | 'login'
 }
 
 const { title = 'Panel Admin - Club del Meta', active = 'reservas' } = Astro.props as Props
@@ -127,6 +127,7 @@ const { title = 'Panel Admin - Club del Meta', active = 'reservas' } = Astro.pro
         <nav>
           <a class={`nav-item ${active === 'reservas' ? 'active' : ''}`} href="/admin/reservas">Reservas</a>
           <a class={`nav-item ${active === 'espacios' ? 'active' : ''}`} href="/admin/espacios">Espacios</a>
+          <a class={`nav-item ${active === 'reportes' ? 'active' : ''}`} href="/admin/reportes">Reportes</a>
           <a class={`nav-item ${active === 'login' ? 'active' : ''}`} href="/admin/login">Login</a>
         </nav>
       </aside>
