@@ -12,13 +12,31 @@ import AdminLayout from '../../layouts/AdminLayout.astro'
       </div>
       <div class="filters">
         <label>
-          Modo
-          <select id="modoSelect">
-            <option value="mensual">Mensual</option>
-            <option value="anual">Anual</option>
+          Vista
+          <select id="vistaSelect">
+            <option value="dia">Por día</option>
+            <option value="mes">Por mes</option>
+            <option value="anio">Por año</option>
           </select>
         </label>
-        <label>
+        <label id="monthSelectorWrap">
+          Mes
+          <select id="monthSelect">
+            <option value="1">Enero</option>
+            <option value="2">Febrero</option>
+            <option value="3">Marzo</option>
+            <option value="4">Abril</option>
+            <option value="5">Mayo</option>
+            <option value="6">Junio</option>
+            <option value="7">Julio</option>
+            <option value="8">Agosto</option>
+            <option value="9">Septiembre</option>
+            <option value="10">Octubre</option>
+            <option value="11">Noviembre</option>
+            <option value="12">Diciembre</option>
+          </select>
+        </label>
+        <label id="yearSelectorWrap">
           Año
           <select id="yearSelect">
             <option value="">Cargando...</option>
@@ -63,11 +81,11 @@ import AdminLayout from '../../layouts/AdminLayout.astro'
       <article class="card chart-card">
         <header class="card__header">
           <div>
-            <p class="eyebrow">Tendencia</p>
-            <h3 id="chartTitle">Cotizaciones por mes</h3>
+            <p class="eyebrow">Calendario</p>
+            <h3 id="chartTitle">Cotizaciones</h3>
           </div>
         </header>
-        <div id="chartBars" class="bars"></div>
+        <div id="calendarGrid" class="calendar-grid"></div>
       </article>
 
       <article class="card chart-card">
@@ -121,18 +139,66 @@ import AdminLayout from '../../layouts/AdminLayout.astro'
   .card__header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem; }
   .chart-card { min-height: 320px; }
 
-  :global(.bars) { display: grid; grid-template-columns: repeat(auto-fit, minmax(42px, 1fr)); gap: 0.75rem; align-items: end; height: 240px; padding: 0.5rem 0.25rem 0; }
-  :global(.bar) { display: grid; gap: 0.25rem; justify-items: center; color: #4b5563; font-size: 0.8rem; }
-  :global(.bar__value) { width: 100%; background: linear-gradient(180deg, #0a4ba5 0%, #2563eb 70%); border-radius: 10px 10px 6px 6px; box-shadow: 0 10px 24px rgba(37,99,235,0.18); transition: opacity 0.15s ease; }
-  :global(.bar__label) { font-weight: 600; }
-  :global(.bar__count) { color: #0f172a; font-weight: 700; }
+  .calendar-grid { display: grid; gap: 0.5rem; padding: 0.5rem 0; min-height: 320px; }
+  .calendar-grid.view-dia { grid-template-columns: repeat(7, 1fr); }
+  .calendar-grid.view-mes { grid-template-columns: repeat(4, 1fr); }
+  .calendar-grid.view-anio { grid-template-columns: repeat(3, 1fr); }
+  :global(.cal-cell) {
+    background: #f8fafc;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    min-height: 90px;
+    padding: 0.6rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    cursor: pointer;
+    transition: border-color 0.15s ease, box-shadow 0.2s ease, transform 0.1s ease;
+  }
+  :global(.cal-cell:hover) { border-color: #bfdbfe; box-shadow: 0 10px 24px rgba(15,23,42,0.08); transform: translateY(-1px); }
+  :global(.cal-cell.has-data) {
+    background: #ffffff;
+    border-color: #2563eb;
+    box-shadow: 0 6px 18px rgba(37,99,235,0.14);
+  }
+  :global(.cal-cell.has-data:hover) {
+    border-color: #0a4ba5;
+    box-shadow: 0 12px 28px rgba(10,75,165,0.2);
+    transform: translateY(-2px);
+  }
+  :global(.cal-label) {
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: #0f172a;
+    text-align: center;
+  }
+  :global(.cal-count) {
+    background: linear-gradient(135deg, #0a4ba5, #2563eb);
+    color: #ffffff;
+    font-size: 0.95rem;
+    font-weight: 800;
+    padding: 0.35rem 0.7rem;
+    border-radius: 999px;
+    box-shadow: 0 8px 16px rgba(37,99,235,0.24);
+    min-width: 32px;
+    text-align: center;
+  }
+  :global(.cal-cell.empty) {
+    background: #f9fafb;
+    border-style: dashed;
+    opacity: 0.4;
+    cursor: default;
+  }
+  :global(.cal-cell.empty:hover) { transform: none; box-shadow: none; border-color: #e5e7eb; }
 
-  .donut-wrap { display: grid; grid-template-columns: 240px 1fr; gap: 1rem; align-items: center; }
-  .donut { width: 200px; height: 200px; border-radius: 50%; background: conic-gradient(#e5e7eb 0deg, #e5e7eb 360deg); display: grid; place-items: center; position: relative; box-shadow: inset 0 2px 6px rgba(0,0,0,0.08), 0 10px 20px rgba(15,23,42,0.08); }
-  .donut-center { width: 110px; height: 110px; background: #ffffff; border-radius: 50%; display: grid; place-items: center; text-align: center; box-shadow: inset 0 1px 0 rgba(255,255,255,0.8); }
-  .donut-number { font-size: 1.4rem; font-weight: 800; color: #0f172a; }
+  .donut-wrap { display: flex; flex-direction: column; align-items: center; gap: 1.5rem; padding: 1rem 0; }
+  .donut { width: 280px; height: 280px; border-radius: 50%; background: conic-gradient(#e5e7eb 0deg, #e5e7eb 360deg); display: grid; place-items: center; position: relative; box-shadow: inset 0 2px 6px rgba(0,0,0,0.08), 0 10px 20px rgba(15,23,42,0.08); }
+  .donut-center { width: 150px; height: 150px; background: #ffffff; border-radius: 50%; display: grid; place-items: center; text-align: center; box-shadow: inset 0 1px 0 rgba(255,255,255,0.8); }
+  .donut-number { font-size: 2rem; font-weight: 800; color: #0f172a; }
   .donut-label { font-size: 0.85rem; color: #6b7280; text-transform: uppercase; letter-spacing: 0.04em; }
-  .legend { display: grid; gap: 0.35rem; font-size: 0.9rem; color: #0f172a; }
+  .legend { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 0.5rem; font-size: 0.9rem; color: #0f172a; width: 100%; max-width: 500px; }
   :global(.legend-item) { display: flex; align-items: center; gap: 0.6rem; justify-content: space-between; padding: 0.45rem 0.6rem; border-radius: 10px; border: 1px solid #e5e7eb; background: #f8fafc; }
   :global(.legend-left) { display: flex; align-items: center; gap: 0.5rem; }
   :global(.dot) { width: 12px; height: 12px; border-radius: 50%; box-shadow: 0 0 0 2px #fff, 0 0 0 4px rgba(0,0,0,0.06); }

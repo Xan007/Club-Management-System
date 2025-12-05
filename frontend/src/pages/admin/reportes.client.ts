@@ -3,7 +3,7 @@ import { supabase } from '../../lib/supabase'
 
 type Maybe<T> = T | null
 
-type Modo = 'mensual' | 'anual'
+type Vista = 'dia' | 'mes' | 'anio'
 
 type Cot = {
   estado?: string
@@ -16,11 +16,11 @@ function qs<T extends HTMLElement>(sel: string): Maybe<T> {
 
 function extractYMD(value?: string): { y: number; m: number; d: number } | null {
   if (!value) return null
-  const m = value.match(/^(\d{4})-(\d{2})-(\d{2})/)
-  if (m) return { y: Number(m[1]), m: Number(m[2]), d: Number(m[3]) }
-  const d = new Date(value)
-  if (Number.isNaN(d.getTime())) return null
-  return { y: d.getFullYear(), m: d.getMonth() + 1, d: d.getDate() }
+  const match = value.match(/^(\d{4})-(\d{2})-(\d{2})/)
+  if (match) return { y: Number(match[1]), m: Number(match[2]), d: Number(match[3]) }
+  const date = new Date(value)
+  if (Number.isNaN(date.getTime())) return null
+  return { y: date.getFullYear(), m: date.getMonth() + 1, d: date.getDate() }
 }
 
 function statusKey(estado?: string): 'aceptada' | 'pendiente' | 'rechazada' | 'otra' {
@@ -60,34 +60,38 @@ function renderKpis(filtered: Cot[]) {
   setText(qs('#kpiRechazadas'), numberFmt(counts.rechazada))
 }
 
-function renderBars(target: Maybe<HTMLDivElement>, series: Array<{ label: string; value: number }>) {
-  if (!target) return
-  target.innerHTML = ''
-  target.className = 'bars'
-  const max = Math.max(1, ...series.map((s) => s.value))
-  series.forEach((s) => {
-    const pct = (s.value / max) * 100
-    const height = Math.max(s.value === 0 ? 8 : 12, pct)
-    
-    const barDiv = document.createElement('div')
-    barDiv.className = 'bar'
-    
-    const valueDiv = document.createElement('div')
-    valueDiv.className = 'bar__value'
-    valueDiv.style.height = `${height}%`
-    
-    const countDiv = document.createElement('div')
-    countDiv.className = 'bar__count'
-    countDiv.textContent = String(s.value)
-    
-    const labelDiv = document.createElement('div')
-    labelDiv.className = 'bar__label'
-    labelDiv.textContent = s.label
-    
-    barDiv.appendChild(valueDiv)
-    barDiv.appendChild(countDiv)
-    barDiv.appendChild(labelDiv)
-    target.appendChild(barDiv)
+function renderCalendar(
+  container: Maybe<HTMLDivElement>,
+  data: Array<{ label: string; count: number; isEmpty?: boolean }>,
+  viewClass: string
+) {
+  if (!container) return
+  container.innerHTML = ''
+  container.className = `calendar-grid ${viewClass}`
+
+  if (!data.length) {
+    container.innerHTML = '<div class="placeholder">Sin datos para mostrar</div>'
+    return
+  }
+
+  data.forEach((item) => {
+    const cell = document.createElement('div')
+    cell.className = item.isEmpty ? 'cal-cell empty' : item.count > 0 ? 'cal-cell has-data' : 'cal-cell'
+
+    const label = document.createElement('div')
+    label.className = 'cal-label'
+    label.textContent = item.label
+
+    cell.appendChild(label)
+
+    if (!item.isEmpty && item.count > 0) {
+      const count = document.createElement('div')
+      count.className = 'cal-count'
+      count.textContent = String(item.count)
+      cell.appendChild(count)
+    }
+
+    container.appendChild(cell)
   })
 }
 
@@ -135,36 +139,59 @@ function renderDonut(target: Maybe<HTMLDivElement>, legendEl: Maybe<HTMLDivEleme
 }
 
 async function main() {
-  const modoSelect = qs<HTMLSelectElement>('#modoSelect')
+  const vistaSelect = qs<HTMLSelectElement>('#vistaSelect')
+  const monthSelect = qs<HTMLSelectElement>('#monthSelect')
   const yearSelect = qs<HTMLSelectElement>('#yearSelect')
+  const monthWrap = qs<HTMLElement>('#monthSelectorWrap')
+  const yearWrap = qs<HTMLElement>('#yearSelectorWrap')
   const chartTitle = qs<HTMLHeadingElement>('#chartTitle')
-  const chartBars = qs<HTMLDivElement>('#chartBars')
+  const calendarGrid = qs<HTMLDivElement>('#calendarGrid')
   const donutChart = qs<HTMLDivElement>('#donutChart')
   const donutLegend = qs<HTMLDivElement>('#donutLegend')
   const btnRefrescar = qs<HTMLButtonElement>('#btnRefrescar')
 
   let cotizaciones: Cot[] = []
-  let modo: Modo = 'mensual'
+  let vista: Vista = 'dia'
   let year = new Date().getFullYear()
+  let month = new Date().getMonth() + 1
   let yearsDisponibles: number[] = []
 
-  function updateYearOptions() {
-    if (!yearSelect) return
+  function updateSelectors() {
+    if (!yearSelect || !monthSelect || !monthWrap || !yearWrap) return
+
     if (!yearsDisponibles.length) yearsDisponibles = [year]
     const opts = yearsDisponibles
       .slice()
       .sort((a, b) => b - a)
       .map((y) => `<option value="${y}">${y}</option>`)
     yearSelect.innerHTML = opts.join('')
+
     if (!yearsDisponibles.includes(year)) {
       year = yearsDisponibles[0]
     }
     yearSelect.value = String(year)
-    yearSelect.disabled = modo === 'anual'
+    monthSelect.value = String(month)
+
+    if (vista === 'dia') {
+      monthWrap.style.display = 'flex'
+      yearWrap.style.display = 'flex'
+    } else if (vista === 'mes') {
+      monthWrap.style.display = 'none'
+      yearWrap.style.display = 'flex'
+    } else {
+      monthWrap.style.display = 'none'
+      yearWrap.style.display = 'none'
+    }
   }
 
   function filteredData(): Cot[] {
-    if (modo === 'mensual') {
+    if (vista === 'dia') {
+      return cotizaciones.filter((c) => {
+        const parts = extractYMD(c.evento?.fecha)
+        if (!parts) return false
+        return parts.y === year && parts.m === month
+      })
+    } else if (vista === 'mes') {
       return cotizaciones.filter((c) => {
         const parts = extractYMD(c.evento?.fecha)
         if (!parts) return false
@@ -174,26 +201,52 @@ async function main() {
     return cotizaciones
   }
 
-  function buildSeries(): Array<{ label: string; value: number }> {
-    if (modo === 'mensual') {
-      const base = Array.from({ length: 12 }, (_, i) => ({ label: ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'][i], value: 0, m: i + 1 }))
+  function buildCalendarData(): Array<{ label: string; count: number; isEmpty?: boolean }> {
+    if (vista === 'dia') {
+      const daysInMonth = new Date(year, month, 0).getDate()
+      const firstDay = new Date(year, month - 1, 1).getDay()
+      const offset = firstDay === 0 ? 6 : firstDay - 1
+
+      const cells: Array<{ label: string; count: number; isEmpty?: boolean }> = []
+      for (let i = 0; i < offset; i++) {
+        cells.push({ label: '', count: 0, isEmpty: true })
+      }
+
+      const dayCounts: Record<number, number> = {}
       filteredData().forEach((c) => {
         const parts = extractYMD(c.evento?.fecha)
-        if (!parts) return
-        const idx = parts.m - 1
-        base[idx].value += 1
+        if (!parts || parts.y !== year || parts.m !== month) return
+        dayCounts[parts.d] = (dayCounts[parts.d] || 0) + 1
       })
-      return base.map(({ label, value }) => ({ label, value }))
+
+      for (let d = 1; d <= daysInMonth; d++) {
+        cells.push({ label: String(d), count: dayCounts[d] || 0 })
+      }
+
+      return cells
+    } else if (vista === 'mes') {
+      const monthNames = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic']
+      const monthCounts: Record<number, number> = {}
+      filteredData().forEach((c) => {
+        const parts = extractYMD(c.evento?.fecha)
+        if (!parts || parts.y !== year) return
+        monthCounts[parts.m] = (monthCounts[parts.m] || 0) + 1
+      })
+
+      return monthNames.map((name, idx) => ({ label: name, count: monthCounts[idx + 1] || 0 }))
+    } else {
+      const yearCounts: Record<number, number> = {}
+      cotizaciones.forEach((c) => {
+        const parts = extractYMD(c.evento?.fecha)
+        if (!parts) return
+        yearCounts[parts.y] = (yearCounts[parts.y] || 0) + 1
+      })
+
+      return Object.keys(yearCounts)
+        .map(Number)
+        .sort((a, b) => a - b)
+        .map((y) => ({ label: String(y), count: yearCounts[y] }))
     }
-    const counts: Record<number, number> = {}
-    cotizaciones.forEach((c) => {
-      const parts = extractYMD(c.evento?.fecha)
-      if (!parts) return
-      counts[parts.y] = (counts[parts.y] || 0) + 1
-    })
-    return Object.entries(counts)
-      .sort(([a], [b]) => Number(a) - Number(b))
-      .map(([y, v]) => ({ label: y, value: Number(v) }))
   }
 
   function buildSalonShare(): Record<string, number> {
@@ -208,15 +261,27 @@ async function main() {
   function render() {
     const data = filteredData()
     renderKpis(data)
-    const series = buildSeries()
-    renderBars(chartBars, series)
-    const titleText = modo === 'mensual' ? `Cotizaciones por mes · ${year}` : 'Cotizaciones por año'
+
+    const calData = buildCalendarData()
+    const viewClass = `view-${vista}`
+    renderCalendar(calendarGrid, calData, viewClass)
+
+    const monthNames = ['Enero', 'Feb', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Sep', 'Oct', 'Nov', 'Dic']
+    let titleText = ''
+    if (vista === 'dia') {
+      titleText = `Cotizaciones por día · ${monthNames[month - 1]} ${year}`
+    } else if (vista === 'mes') {
+      titleText = `Cotizaciones por mes · ${year}`
+    } else {
+      titleText = 'Cotizaciones por año'
+    }
     if (chartTitle) chartTitle.textContent = titleText
+
     renderDonut(donutChart, donutLegend, buildSalonShare())
   }
 
   async function loadData() {
-    if (chartBars) chartBars.innerHTML = '<div class="placeholder">Cargando...</div>'
+    if (calendarGrid) calendarGrid.innerHTML = '<div class="placeholder">Cargando...</div>'
     try {
       const resp = await cotizacionesAPI.listar({})
       cotizaciones = (resp as any)?.data || []
@@ -232,17 +297,22 @@ async function main() {
           year = Math.max(...yearsDisponibles)
         }
       }
-      updateYearOptions()
+      updateSelectors()
       render()
     } catch (err) {
       console.error('Error cargando reportes', err)
-      if (chartBars) chartBars.innerHTML = '<div class="placeholder">No se pudieron cargar los datos.</div>'
+      if (calendarGrid) calendarGrid.innerHTML = '<div class="placeholder">No se pudieron cargar los datos.</div>'
     }
   }
 
-  modoSelect?.addEventListener('change', (e) => {
-    modo = ((e.target as HTMLSelectElement).value as Modo) || 'mensual'
-    updateYearOptions()
+  vistaSelect?.addEventListener('change', (e) => {
+    vista = ((e.target as HTMLSelectElement).value as Vista) || 'dia'
+    updateSelectors()
+    render()
+  })
+
+  monthSelect?.addEventListener('change', (e) => {
+    month = Number((e.target as HTMLSelectElement).value) || month
     render()
   })
 
@@ -262,3 +332,5 @@ async function main() {
 window.addEventListener('DOMContentLoaded', () => {
   main().catch((err) => console.error('Error inicializando reportes admin', err))
 })
+
+

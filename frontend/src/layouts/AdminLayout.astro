@@ -1,4 +1,6 @@
 ---
+import logoCorpmeta from '../assets/logo_corpmeta.png'
+
 interface Props {
   title?: string
   active?: 'reservas' | 'espacios' | 'reportes' | 'login'
@@ -72,15 +74,10 @@ const { title = 'Panel Admin - Club del Meta', active = 'reservas' } = Astro.pro
         letter-spacing: -0.02em;
       }
 
-      .brand-badge {
-        width: 36px;
-        height: 36px;
-        border-radius: 10px;
-        background: rgba(255,255,255,0.12);
-        display: grid;
-        place-items: center;
-        color: #fff;
-        font-weight: 700;
+      .brand-logo {
+        width: 50px;
+        height: 50px;
+        object-fit: contain;
       }
 
       nav {
@@ -118,7 +115,7 @@ const { title = 'Panel Admin - Club del Meta', active = 'reservas' } = Astro.pro
     <div class="layout">
       <aside class="sidebar">
         <div class="brand">
-          <div class="brand-badge">CM</div>
+          <img src={logoCorpmeta.src} alt="Club del Meta" class="brand-logo" />
           <div>
             <div>Club del Meta</div>
             <small style="color: var(--color-muted);">Panel Admin</small>
