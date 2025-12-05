@@ -1,0 +1,92 @@
+---
+import AdminLayout from '../../layouts/AdminLayout.astro'
+---
+
+<AdminLayout title="Reservas - Club del Meta" active="reservas">
+  <section class="panel">
+    <header class="panel__header">
+      <div>
+        <p class="eyebrow">Administración</p>
+        <h1>Reservas</h1>
+        <p class="muted">Gestiona cotizaciones, confirma reservas (bloqueo automático del calendario) y controla pagos.</p>
+      </div>
+      <div class="actions">
+        <button id="btnRefrescar" class="btn secondary">Refrescar datos</button>
+        <a class="btn ghost" href="/admin/login">Cerrar sesión</a>
+      </div>
+    </header>
+
+    <section class="card">
+      <div class="card__header">
+        <div>
+          <p class="eyebrow">Reservas</p>
+          <h2>Cotizaciones / Reservas</h2>
+        </div>
+        <div class="filters">
+          <label>
+            Estado
+            <select id="fEstado">
+              <option value="">Todos</option>
+              <option value="pendiente">Pendiente</option>
+              <option value="aceptada">Aceptada</option>
+              <option value="rechazada">Rechazada</option>
+            </select>
+          </label>
+          <label>
+            Pago
+            <select id="fPago">
+              <option value="">Todos</option>
+              <option value="sin_pagar">Sin pagar</option>
+              <option value="abono_pendiente">Abono pendiente</option>
+              <option value="abonado">Abonado</option>
+              <option value="pagado">Pagado</option>
+            </select>
+          </label>
+          <button id="btnFiltrar" class="btn primary">Filtrar</button>
+        </div>
+      </div>
+
+      <div id="cotizacionesTabla" class="table-wrapper">
+        <div class="placeholder">Cargando cotizaciones...</div>
+      </div>
+    </section>
+  </section>
+</AdminLayout>
+
+<script type="module" src="/src/pages/admin/reservas.client.ts"></script>
+
+<style>
+  .panel { padding: 2rem; max-width: 1200px; margin: 0 auto 4rem; }
+  .panel__header { display: flex; justify-content: space-between; gap: 1rem; align-items: flex-start; }
+  .eyebrow { text-transform: uppercase; letter-spacing: 0.08em; font-size: 0.8rem; color: #0a4ba5; margin: 0 0 0.3rem; }
+  h1 { margin: 0; color: #0f172a; }
+  h2 { margin: 0; color: #111827; }
+  .muted { color: #4b5563; margin: 0.4rem 0 0; max-width: 640px; }
+  .actions { display: flex; gap: 0.5rem; align-items: center; }
+  .card { background: #ffffff; border: 1px solid #e5e7eb; border-radius: 16px; padding: 1.25rem; box-shadow: 0 10px 30px rgba(15,23,42,0.06); margin-top: 1.5rem; }
+  .card__header { display: flex; justify-content: space-between; gap: 1rem; align-items: center; flex-wrap: wrap; }
+  .filters { display: flex; gap: 0.75rem; align-items: flex-end; flex-wrap: wrap; }
+  label { font-size: 0.9rem; color: #4b5563; display: flex; flex-direction: column; gap: 0.25rem; }
+  select, input, textarea { border: 1px solid #d1d5db; border-radius: 8px; padding: 0.55rem 0.75rem; font: inherit; background: #ffffff; color: #111827; }
+  table { width: 100%; border-collapse: collapse; }
+  th, td { padding: 0.65rem 0.5rem; border-bottom: 1px solid #e5e7eb; text-align: left; vertical-align: middle; }
+  th { font-weight: 600; color: #0f172a; background: #f8fafc; }
+  .placeholder { padding: 1rem; color: #6b7280; text-align: center; }
+  .error { padding: 1rem; color: #b91c1c; background: #fef2f2; border: 1px solid #fecaca; border-radius: 12px; text-align: center; }
+  .btn { border: none; border-radius: 10px; padding: 0.65rem 1rem; font-weight: 600; cursor: pointer; font: inherit; transition: transform 0.1s ease, box-shadow 0.2s ease; }
+  .btn.primary { background: linear-gradient(135deg, #0a4ba5, #2563eb); color: #fff; box-shadow: 0 10px 20px rgba(37,99,235,0.2); }
+  .btn.secondary { background: #eef2ff; color: #1d4ed8; border: 1px solid #dbeafe; }
+  .btn.ghost { background: #ffffff; color: #0f172a; border: 1px solid #e5e7eb; }
+  .btn:hover { transform: translateY(-1px); }
+  .table-wrapper { overflow-x: auto; margin-top: 1rem; }
+  .badge { display: inline-block; background: #e0f2fe; color: #075985; padding: 0.25rem 0.65rem; border-radius: 999px; font-size: 0.8rem; border: 1px solid #bae6fd; }
+  .actions-cell { display: flex; flex-wrap: wrap; gap: 0.25rem 0.5rem; }
+  .link { background: #eff6ff; border: 1px solid #dbeafe; color: #1d4ed8; cursor: pointer; padding: 0.35rem 0.5rem; border-radius: 8px; font-weight: 600; font-size: 0.9rem; }
+  .link.danger { color: #b91c1c; background: #fef2f2; border-color: #fecdd3; }
+  .cell-strong { font-weight: 600; color: #0f172a; }
+  .cell-muted { color: #6b7280; font-size: 0.95rem; }
+  @media (max-width: 900px) {
+    .panel__header { flex-direction: column; }
+    .card__header { flex-direction: column; align-items: flex-start; }
+  }
+</style>

@@ -1,125 +1,18 @@
 ---
-import AdminLayout from '../../layouts/AdminLayout.astro'
 ---
 
-<AdminLayout title="Panel Admin - Club del Meta">
-  <section class="panel">
-    <header class="panel__header">
-      <div>
-        <p class="eyebrow">Administración</p>
-        <h1>Panel de reservas y salones</h1>
-        <p class="muted">Gestiona cotizaciones, confirma reservas (bloqueo automático del calendario) y actualiza salones/disposiciones.</p>
-      </div>
-      <div class="actions">
-        <button id="btnRefrescar" class="btn secondary">Refrescar datos</button>
-        <a class="btn ghost" href="/admin/login">Cerrar sesión</a>
-      </div>
-    </header>
-
-    <div class="grid">
-      <section class="card">
-        <div class="card__header">
-          <div>
-            <p class="eyebrow">Reservas</p>
-            <h2>Cotizaciones / Reservas</h2>
-          </div>
-          <div class="filters">
-            <label>
-              Estado
-              <select id="fEstado">
-                <option value="">Todos</option>
-                <option value="pendiente">Pendiente</option>
-                <option value="aceptada">Aceptada</option>
-                <option value="rechazada">Rechazada</option>
-              </select>
-            </label>
-            <label>
-              Pago
-              <select id="fPago">
-                <option value="">Todos</option>
-                <option value="sin_pagar">Sin pagar</option>
-                <option value="abono_pendiente">Abono pendiente</option>
-                <option value="abonado">Abonado</option>
-                <option value="pagado">Pagado</option>
-              </select>
-            </label>
-            <button id="btnFiltrar" class="btn secondary">Filtrar</button>
-          </div>
-        </div>
-
-        <div id="cotizacionesTabla" class="table-wrapper">
-          <div class="placeholder">Cargando cotizaciones...</div>
-        </div>
-      </section>
-
-      <section class="card">
-        <div class="card__header">
-          <div>
-            <p class="eyebrow">Salones</p>
-            <h2>Gestión de espacios</h2>
-          </div>
-          <div class="filters">
-            <button id="btnNuevoEspacio" class="btn primary">+ Nuevo salón</button>
-          </div>
-        </div>
-
-        <div id="espaciosLista" class="space-list">
-          <div class="placeholder">Cargando salones...</div>
-        </div>
-      </section>
-    </div>
-  </section>
-  </section>
-</AdminLayout>
-
-<script type="module" src="/src/pages/admin/panel.client.ts"></script>
-<script type="module" src="/src/pages/admin/panel.client.ts"></script>
-
-<style>
-  .panel { padding: 2rem; max-width: 1200px; margin: 0 auto 4rem; }
-  .panel__header { display: flex; justify-content: space-between; gap: 1rem; align-items: flex-start; }
-  .eyebrow { text-transform: uppercase; letter-spacing: 0.08em; font-size: 0.8rem; color: var(--color-primary); margin: 0 0 0.3rem; }
-  h1 { margin: 0; }
-  .muted { color: #a5b4fc; margin: 0.4rem 0 0; max-width: 640px; }
-  .actions { display: flex; gap: 0.5rem; align-items: center; }
-  .grid { display: grid; grid-template-columns: 1fr; gap: 1.5rem; margin-top: 1.5rem; }
-  .card { background: rgba(255,255,255,0.02); border: 1px solid #1f2937; border-radius: 16px; padding: 1.25rem; box-shadow: 0 10px 30px rgba(0,0,0,0.3); }
-  .card__header { display: flex; justify-content: space-between; gap: 1rem; align-items: center; flex-wrap: wrap; }
-  .filters { display: flex; gap: 0.75rem; align-items: flex-end; flex-wrap: wrap; }
-  label { font-size: 0.9rem; color: #d1d5db; display: flex; flex-direction: column; gap: 0.25rem; }
-  select, input, textarea { border: 1px solid #1f2937; border-radius: 8px; padding: 0.5rem 0.75rem; font: inherit; background: #111827; color: #e5e7eb; }
-  table { width: 100%; border-collapse: collapse; }
-  th, td { padding: 0.65rem 0.5rem; border-bottom: 1px solid #1f2937; text-align: left; vertical-align: top; }
-  th { font-weight: 600; color: #cbd5f5; }
-  .placeholder { padding: 1rem; color: #9ca3af; text-align: center; }
-  .error { padding: 1rem; color: #fecdd3; background: #7f1d1d; border: 1px solid #fecaca; border-radius: 12px; text-align: center; }
-  .btn { border: none; border-radius: 10px; padding: 0.6rem 1rem; font-weight: 600; cursor: pointer; font: inherit; }
-  .btn.primary { background: linear-gradient(135deg, #22c55e, #16a34a); color: #fff; }
-  .btn.secondary { background: rgba(59,130,246,0.15); color: #bfdbfe; border: 1px solid rgba(59,130,246,0.3); }
-  .btn.ghost { background: transparent; color: #e5e7eb; border: 1px solid #1f2937; }
-  .table-wrapper { overflow-x: auto; }
-  .badge { display: inline-block; background: rgba(34,197,94,0.15); color: #4ade80; padding: 0.2rem 0.6rem; border-radius: 999px; font-size: 0.8rem; }
-  .actions-cell { display: flex; flex-wrap: wrap; gap: 0.25rem 0.5rem; }
-  .link { background: none; border: none; color: #93c5fd; cursor: pointer; padding: 0; font-weight: 600; }
-  .link.danger { color: #fca5a5; }
-  .cell-strong { font-weight: 600; color: #e5e7eb; }
-  .cell-muted { color: #9ca3af; font-size: 0.9rem; }
-  .space-list { display: grid; gap: 1rem; }
-  .space-card { border: 1px solid #1f2937; border-radius: 14px; padding: 1rem; background: #0b1224; }
-  .space-card__header { display: flex; justify-content: space-between; gap: 0.5rem; align-items: center; }
-  .space-input { width: 100%; margin: 0.25rem 0; }
-  .space-actions { text-align: right; margin: 0.25rem 0 0.75rem; }
-  .configs { background: #0f172a; border: 1px solid #1f2937; border-radius: 10px; padding: 0.75rem; }
-  .configs__header { display: flex; justify-content: space-between; gap: 0.5rem; align-items: center; flex-wrap: wrap; }
-  .add-config { display: flex; gap: 0.5rem; align-items: center; }
-  .configs__list { display: grid; gap: 0.5rem; margin-top: 0.75rem; }
-  .config-row { display: grid; grid-template-columns: 1.2fr 0.6fr 0.8fr; align-items: center; gap: 0.5rem; padding: 0.5rem; border: 1px solid #1f2937; border-radius: 8px; background: #111827; }
-  .row-actions { display: flex; gap: 0.5rem; justify-content: flex-end; }
-  .switch { display: inline-flex; align-items: center; gap: 0.35rem; font-size: 0.9rem; color: #d1d5db; }
-  .switch input { width: 18px; height: 18px; }
-  @media (max-width: 900px) {
-    .panel__header { flex-direction: column; }
-    .config-row { grid-template-columns: 1fr; }
-    .card__header { flex-direction: column; align-items: flex-start; }
+<script>
+  if (typeof window !== 'undefined') {
+    window.location.replace('/admin/reservas')
   }
-</style>
+</script>
+
+<div style="font-family: Inter, system-ui; padding: 2rem; max-width: 720px; margin: 0 auto;">
+  <h1>Panel movido</h1>
+  <p>El panel ahora está dividido en dos secciones:</p>
+  <ul>
+    <li><a href="/admin/reservas">Reservas</a></li>
+    <li><a href="/admin/espacios">Espacios</a></li>
+  </ul>
+  <p>Serás redirigido automáticamente.</p>
+</div>
