@@ -7,9 +7,27 @@ function qs<T extends HTMLElement>(sel: string): Maybe<T> {
   return document.querySelector(sel) as Maybe<T>
 }
 
-function dateKey(value: string | Date): string {
+function extractYMD(value: string | Date): { y: number; m: number; d: number } | null {
+  if (typeof value === 'string') {
+    // Capture the date portion only, ignoring timezone offsets
+    const m = value.match(/^(\d{4})-(\d{2})-(\d{2})/)
+    if (m) {
+      return { y: Number(m[1]), m: Number(m[2]), d: Number(m[3]) }
+    }
+  }
+
   const d = value instanceof Date ? value : new Date(value)
-  return Number.isNaN(d.getTime()) ? '' : d.toISOString().slice(0, 10)
+  if (Number.isNaN(d.getTime())) return null
+  return { y: d.getFullYear(), m: d.getMonth() + 1, d: d.getDate() }
+}
+
+function dateKey(value: string | Date): string {
+  const parts = extractYMD(value)
+  if (!parts) return ''
+  const { y, m, d } = parts
+  const mm = String(m).padStart(2, '0')
+  const dd = String(d).padStart(2, '0')
+  return `${y}-${mm}-${dd}`
 }
 
 function stateClass(estado?: string): string {
@@ -22,10 +40,10 @@ function stateClass(estado?: string): string {
 }
 
 function formatFullDate(key: string): string {
-  const d = new Date(key)
-  return Number.isNaN(d.getTime())
-    ? key
-    : d.toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })
+  const parts = extractYMD(key)
+  if (!parts) return key
+  const date = new Date(parts.y, parts.m - 1, parts.d)
+  return date.toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })
 }
 
 async function ensureSession() {
