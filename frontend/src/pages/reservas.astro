@@ -211,24 +211,29 @@ const espacios = [
       box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
       display: flex;
       scroll-snap-align: start;
-      min-height: 380px; /* slightly more compact */
+      min-height: 380px;
       position: relative;
       overflow: hidden;
-      transition: transform 0.22s cubic-bezier(.2,.9,.2,1), box-shadow 0.22s ease, border-color 0.22s ease;
+      transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
       transform-origin: center center;
-      will-change: transform;
     }
 
     .reserva-card:hover {
-      transform: scale(1.06) translateY(-5px); /* reduced hover scale */
-      box-shadow: 0 12px 36px rgba(0, 0, 0, 0.45);
-      z-index: 10;
-      border-color: rgba(10, 75, 165, 0.18);
+      transform: translateY(-4px);
+      box-shadow: 0 12px 20px rgba(0, 0, 0, 0.18);
+      border-color: rgba(10, 75, 165, 0.15);
+    }
+
+    @media (hover: none) {
+      .reserva-card:hover {
+        transform: none;
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+        border-color: rgba(255, 255, 255, 0.04);
+      }
     }
 
     .reserva-card:hover h2 {
-      transform: scale(1.05);
-      letter-spacing: 0.1em;
+      letter-spacing: 0.08em;
     }
 
     .reserva-card:hover .reserva-card__highlight {
@@ -370,7 +375,7 @@ const espacios = [
       }
 
       .reserva-card h2 {
-        font-size: 1.6rem; /* larger on tablet/mobile but still balanced */
+        font-size: 1.85rem;
       }
 
       .reserva-card__badge {
@@ -383,20 +388,23 @@ const espacios = [
       }
 
       .reserva-card p {
-        font-size: 0.9rem;
-        line-height: 1.55;
+        font-size: 1rem;
+        line-height: 1.6;
       }
 
       .reserva-card button,
       .reserva-card .cotizar-btn {
-        width: 100%;
-        align-self: stretch;
-        padding: 0.6rem 1rem;
-        font-size: 0.95rem;
+        width: auto;
+        align-self: center;
+        padding: 0.55rem 1.5rem;
+        font-size: 0.875rem;
+        min-width: auto;
       }
 
       .reserva-card .cotizar-btn {
-        position: static; /* place inline in mobile layout */
+        position: static;
+        left: auto;
+        bottom: auto;
       }
 
       .reservas__header h1 {
@@ -419,7 +427,7 @@ const espacios = [
       }
 
       .reserva-card h2 {
-        font-size: 1.3rem;
+        font-size: 1.65rem;
       }
 
       .reserva-card__badge {
@@ -432,18 +440,20 @@ const espacios = [
       }
 
       .reserva-card p {
-        font-size: 0.875rem;
-        line-height: 1.5;
+        font-size: 0.95rem;
+        line-height: 1.55;
       }
 
       .reserva-card button,
       .reserva-card .cotizar-btn {
-        padding: 0.7rem 1rem;
-        font-size: 0.9rem;
+        padding: 0.55rem 1.5rem;
+        font-size: 0.85rem;
       }
 
       .reserva-card .cotizar-btn {
         position: static;
+        left: auto;
+        bottom: auto;
       }
 
       .reservas__header h1 {
