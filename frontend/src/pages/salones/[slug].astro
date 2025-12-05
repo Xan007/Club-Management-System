@@ -293,12 +293,6 @@ if (!salon) {
 </script>
 
 <style>
-  /* Prevent horizontal scroll */
-  html, body {
-    overflow-x: hidden;
-    max-width: 100vw;
-  }
-
   /* Hero Section */
   .salon-hero {
     position: relative;
@@ -309,7 +303,6 @@ if (!salon) {
     overflow: hidden;
     margin: 0;
     width: 100%;
-    max-width: 100vw;
   }
 
   .salon-hero__background {
@@ -385,9 +378,6 @@ if (!salon) {
   .salon-content-section {
     background: #ffffff;
     padding: 3rem 2rem;
-    width: 100%;
-    max-width: 100vw;
-    overflow-x: hidden;
   }
 
   /* Content Layout */
@@ -397,7 +387,6 @@ if (!salon) {
     gap: 3rem;
     max-width: 1200px;
     margin: 0 auto;
-    width: 100%;
   }
 
   /* Sidebar */
@@ -783,7 +772,6 @@ if (!salon) {
   @media (max-width: 1024px) {
     .salon-content {
       grid-template-columns: 1fr;
-      padding: 2rem 1.5rem;
     }
 
     .salon-sidebar {
@@ -815,19 +803,40 @@ if (!salon) {
     .salon-hero {
       min-height: 60vh;
     }
+
+    .salon-content-section {
+      padding: 3rem 1.5rem;
+    }
   }
 
-  @media (max-width: 768px) {
+  @media (max-width: 640px) {
     .salon-hero h1 {
       font-size: 2rem;
     }
 
-    .salon-hero__subtitulo {
+    .salon-hero p {
       font-size: 1rem;
     }
 
     .salon-sidebar {
       grid-template-columns: 1fr;
+    }
+
+    .salon-sidebar .back-button {
+      width: 100%;
+      justify-content: center;
+      font-size: 0.8rem;
+      padding: 0.4rem 0.75rem;
+      gap: 0.35rem;
+    }
+
+    .salon-sidebar .back-button svg {
+      width: 14px;
+      height: 14px;
+    }
+
+    .salon-info-card {
+      padding: 1.5rem;
     }
 
     .cta-button {
@@ -850,6 +859,10 @@ if (!salon) {
 
     .cta-actions {
       flex-direction: column;
+    }
+
+    .cta-card {
+      padding: 1.5rem;
     }
   }
 </style>
