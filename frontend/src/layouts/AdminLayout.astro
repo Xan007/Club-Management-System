@@ -85,6 +85,14 @@ const { title = 'Panel Admin - Club del Meta', active = 'reservas' } = Astro.pro
         gap: 0.35rem;
       }
 
+      .bottom-actions {
+        display: grid;
+        gap: 0.35rem;
+        margin-top: auto;
+        padding-top: 1rem;
+        border-top: 1px solid rgba(255,255,255,0.12);
+      }
+
       .nav-item {
         padding: 0.75rem 0.85rem;
         border-radius: 10px;
@@ -95,6 +103,12 @@ const { title = 'Panel Admin - Club del Meta', active = 'reservas' } = Astro.pro
         gap: 0.6rem;
         border: 1px solid transparent;
         transition: all 0.15s ease;
+        background: none;
+        cursor: pointer;
+        font-size: 1rem;
+        font-family: inherit;
+        text-align: left;
+        width: 100%;
       }
 
       .nav-item:hover { color: #fff; border-color: rgba(255,255,255,0.2); background: rgba(255,255,255,0.08); }
@@ -106,8 +120,9 @@ const { title = 'Panel Admin - Club del Meta', active = 'reservas' } = Astro.pro
 
       @media (max-width: 900px) {
         .layout { grid-template-columns: 1fr; }
-        .sidebar { position: relative; height: auto; flex-direction: row; align-items: center; }
+        .sidebar { position: relative; height: auto; flex-direction: row; align-items: center; flex-wrap: wrap; }
         nav { grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); width: 100%; }
+        .bottom-actions { width: 100%; margin-top: 1rem; border-top: 1px solid rgba(255,255,255,0.12); padding-top: 1rem; grid-template-columns: 1fr 1fr; }
       }
     </style>
   </head>
@@ -125,12 +140,45 @@ const { title = 'Panel Admin - Club del Meta', active = 'reservas' } = Astro.pro
           <a class={`nav-item ${active === 'reservas' ? 'active' : ''}`} href="/admin/reservas">Reservas</a>
           <a class={`nav-item ${active === 'espacios' ? 'active' : ''}`} href="/admin/espacios">Espacios</a>
           <a class={`nav-item ${active === 'reportes' ? 'active' : ''}`} href="/admin/reportes">Reportes</a>
-          <a class={`nav-item ${active === 'login' ? 'active' : ''}`} href="/admin/login">Login</a>
         </nav>
+        <div class="bottom-actions">
+          <a class="nav-item" href="/" target="_blank" rel="noopener noreferrer">🌐 Ver sitio web</a>
+          <button class="nav-item" id="logoutBtn">🚪 Cerrar sesión</button>
+        </div>
       </aside>
       <main class="content">
         <slot />
       </main>
     </div>
+
+    <script>
+      // Check authentication on page load
+      const adminAuth = localStorage.getItem('adminAuth');
+      if (!adminAuth) {
+        window.location.href = '/admin/login';
+      } else {
+        try {
+          const auth = JSON.parse(adminAuth);
+          if (!auth.isAuthenticated || !auth.token) {
+            localStorage.removeItem('adminAuth');
+            window.location.href = '/admin/login';
+          }
+        } catch (error) {
+          localStorage.removeItem('adminAuth');
+          window.location.href = '/admin/login';
+        }
+      }
+
+      // Logout functionality
+      const logoutBtn = document.getElementById('logoutBtn');
+      logoutBtn?.addEventListener('click', () => {
+        // Clear all authentication data
+        localStorage.removeItem('adminAuth');
+        sessionStorage.clear();
+        
+        // Redirect to login
+        window.location.href = '/admin/login';
+      });
+    </script>
   </body>
 </html>
