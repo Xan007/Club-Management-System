@@ -293,6 +293,12 @@ if (!salon) {
 </script>
 
 <style>
+  /* Prevent horizontal scroll */
+  html, body {
+    overflow-x: hidden;
+    max-width: 100vw;
+  }
+
   /* Hero Section */
   .salon-hero {
     position: relative;
@@ -303,6 +309,7 @@ if (!salon) {
     overflow: hidden;
     margin: 0;
     width: 100%;
+    max-width: 100vw;
   }
 
   .salon-hero__background {
@@ -379,6 +386,8 @@ if (!salon) {
     background: #ffffff;
     padding: 3rem 2rem;
     width: 100%;
+    max-width: 100vw;
+    overflow-x: hidden;
   }
 
   /* Content Layout */
@@ -388,6 +397,7 @@ if (!salon) {
     gap: 3rem;
     max-width: 1200px;
     margin: 0 auto;
+    width: 100%;
   }
 
   /* Sidebar */
