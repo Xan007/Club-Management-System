@@ -27,6 +27,23 @@ export default class SalonPost extends BaseModel {
   @column()
   declare mainImageUrl: string | null
 
+  @column({
+    columnName: 'imagenes',
+    prepare: (value: any) => (value ? JSON.stringify(value) : null),
+    consume: (value: any) => {
+      if (!value) return null
+      // PostgreSQL JSONB ya viene como objeto, no como string
+      if (typeof value === 'object') return value
+      // Si por alguna razón viene como string, parsearlo
+      try {
+        return JSON.parse(value)
+      } catch {
+        return null
+      }
+    },
+  })
+  declare imagenes: Array<{ url: string; alt?: string }> | null
+
   @column()
   declare publicado: boolean
 

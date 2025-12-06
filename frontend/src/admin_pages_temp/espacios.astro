@@ -1,5 +1,7 @@
 ---
 import AdminLayout from '../../layouts/AdminLayout.astro'
+
+export const prerender = false
 ---
 
 <AdminLayout title="Espacios - Club del Meta" active="espacios">
@@ -205,7 +207,7 @@ import AdminLayout from '../../layouts/AdminLayout.astro'
   </section>
 </AdminLayout>
 
-<script type="module" src="/src/pages/admin/espacios.client.ts"></script>
+<script is:inline type="module" src="/src/pages/admin/espacios.client.ts"></script>
 
 <style>
   .panel { padding: 2rem; max-width: 1200px; margin: 0 auto 4rem; }

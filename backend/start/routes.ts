@@ -91,6 +91,12 @@ router.get('/api/disposiciones', [EspacioController, 'listarDisposiciones'])
 router.get('/api/prestaciones', [EspacioController, 'listarPrestaciones'])
 router.get('/api/servicios-adicionales', [EspacioController, 'listarPrestaciones'])
 
+// Espacios Públicos (con caché para frontend)
+const EspaciosPublicosController = () => import('#controllers/espacios_publicos_controller')
+router.get('/api/espacios-publicos', [EspaciosPublicosController, 'index'])
+router.get('/api/espacios-publicos/:slug', [EspaciosPublicosController, 'show'])
+router.delete('/api/espacios-publicos/cache', [EspaciosPublicosController, 'clearCache']).use(middleware.auth()).use(middleware.checkRole('admin'))
+
 // Salon Posts (Blog) routes - públicas con cache
 const SalonPostsController = () => import('#controllers/salon_posts_controller')
 router.get('/api/salon-posts', [SalonPostsController, 'index'])

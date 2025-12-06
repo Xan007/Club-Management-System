@@ -1,6 +1,34 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro'
-import { salonesData } from '../data/salones'
+
+const API_URL = import.meta.env.PUBLIC_BACKEND_URL || 'http://localhost:3333'
+
+// Obtener espacios desde la API
+let salonesData = []
+try {
+  const response = await fetch(`${API_URL}/api/espacios`)
+  const result = await response.json()
+  
+  if (result.success && result.data) {
+    // Mapear a estructura compatible
+    salonesData = result.data.map((espacio: any) => ({
+      id: espacio.id,
+      nombre: espacio.nombre,
+      slug: espacio.slug,
+      subtitulo: espacio.subtitulo || '',
+      descripcionCorta: espacio.descripcion || '',
+      capacidad: {
+        minima: espacio.capacidad_minima || 0,
+        maxima: espacio.capacidad_maxima || 0
+      },
+      imagenes: espacio.imagenes || [],
+      precioDesde: espacio.precio_desde || 'Consultar',
+      destacado: espacio.destacado || false
+    }))
+  }
+} catch (error) {
+  console.error('Error cargando espacios:', error)
+}
 ---
 
 <BaseLayout title="Nuestros Salones - Club del Meta">

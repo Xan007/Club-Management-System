@@ -1,20 +1,59 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro'
 import Navbar from '../../components/Navbar.astro'
-import { salonesData, getSalonBySlug } from '../../data/salones'
 
-export function getStaticPaths() {
-  return salonesData.map(salon => ({
-    params: { slug: salon.slug },
-    props: { salon }
-  }))
+// Obtener todos los espacios desde la API para generar rutas estáticas
+export async function getStaticPaths() {
+  const API_URL = import.meta.env.PUBLIC_BACKEND_URL || 'http://localhost:3333'
+  
+  try {
+    const response = await fetch(`${API_URL}/api/espacios`)
+    const result = await response.json()
+    
+    if (!result.success || !result.data) {
+      console.error('Error fetching espacios:', result)
+      return []
+    }
+
+    return result.data
+      .filter((espacio: any) => espacio.slug) // Solo espacios con slug
+      .map((espacio: any) => ({
+        params: { slug: espacio.slug },
+        props: { espacio }
+      }))
+  } catch (error) {
+    console.error('Error en getStaticPaths:', error)
+    return []
+  }
 }
 
 const { slug } = Astro.params
-const { salon } = Astro.props
+const { espacio } = Astro.props
 
-if (!salon) {
+if (!espacio) {
   return Astro.redirect('/salones')
+}
+
+// Mapear estructura de la API a la estructura que usa el template
+const salon = {
+  id: espacio.id,
+  nombre: espacio.nombre,
+  slug: espacio.slug,
+  subtitulo: espacio.subtitulo || '',
+  descripcionCorta: espacio.descripcion || '',
+  descripcionCompleta: espacio.descripcion_completa || '',
+  caracteristicas: espacio.caracteristicas || [],
+  serviciosIncluidos: espacio.servicios_incluidos || [],
+  capacidad: {
+    minima: espacio.capacidad_minima || 0,
+    maxima: espacio.capacidad_maxima || 0
+  },
+  dimensiones: espacio.area_m2 ? `${espacio.area_m2} m²` : 'Consultar',
+  imagenes: espacio.imagenes || [],
+  horarioDisponible: espacio.horario_disponible || 'Consultar',
+  precioDesde: espacio.precio_desde || 'Consultar',
+  destacado: espacio.destacado || false,
+  fechaActualizacion: espacio.contenido_actualizado_at || new Date().toISOString()
 }
 ---
 
@@ -79,19 +118,6 @@ if (!salon) {
             <div class="info-item__content">
               <span class="info-item__label">Dimensiones</span>
               <span class="info-item__value">{salon.dimensiones}</span>
-            </div>
-          </div>
-
-          <div class="info-item">
-            <div class="info-item__icon">
-              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <circle cx="12" cy="12" r="10"></circle>
-                <polyline points="12 6 12 12 16 14"></polyline>
-              </svg>
-            </div>
-            <div class="info-item__content">
-              <span class="info-item__label">Horario</span>
-              <span class="info-item__value">{salon.horarioDisponible}</span>
             </div>
           </div>
 
