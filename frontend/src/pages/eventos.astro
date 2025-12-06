@@ -298,6 +298,7 @@ try {
     max-height: 150px;
     overflow: hidden;
     position: relative;
+    --show-gradient: 1;
   }
 
   .evento-item__preview::after {
@@ -308,6 +309,7 @@ try {
     right: 0;
     height: 40px;
     background: linear-gradient(to bottom, transparent, white);
+    opacity: var(--show-gradient);
   }
 
   /* Estilos para markdown en el preview */
@@ -743,7 +745,49 @@ try {
     })
   })
 
-  // Ver más / Ver menos
+  // Ver más / Ver menos - Solo mostrar si es necesario
+  function checkOverflow() {
+    document.querySelectorAll('.evento-item__content').forEach((content) => {
+      const btn = content.querySelector('.ver-mas-btn')
+      const preview = content.querySelector('[data-preview]')
+      const collapsible = content.querySelector('.collapsible')
+      
+      if (!btn || !preview || !collapsible) return
+      
+      // Verificar si el contenido completo es más alto que el preview
+      const collapsibleContent = collapsible.querySelector('.collapsible-content')
+      if (!collapsibleContent) return
+      
+      // Temporalmente expandir para medir
+      const originalDisplay = collapsible.style.display
+      const originalMaxHeight = collapsible.style.maxHeight
+      collapsible.style.display = 'block'
+      collapsible.style.maxHeight = 'none'
+      
+      const contentHeight = collapsibleContent.scrollHeight
+      const previewHeight = preview.offsetHeight
+      
+      // Restaurar
+      collapsible.style.display = originalDisplay
+      collapsible.style.maxHeight = originalMaxHeight
+      
+      // Solo mostrar botón si hay contenido que expandir (más de 20px de diferencia)
+      if (contentHeight > previewHeight + 20) {
+        btn.style.display = 'block'
+      } else {
+        btn.style.display = 'none'
+        // Si no hay contenido extra, ocultar el gradiente del preview
+        if (preview.querySelector('::after') || true) {
+          preview.style.setProperty('--show-gradient', '0')
+        }
+      }
+    })
+  }
+
+  // Ejecutar al cargar y al redimensionar
+  checkOverflow()
+  window.addEventListener('resize', checkOverflow)
+
   document.querySelectorAll('.ver-mas-btn').forEach((btn) => {
     btn.addEventListener('click', () => {
       const content = btn.closest('.evento-item__content')
