@@ -1,20 +1,8 @@
-import { c as createComponent, m as maybeRenderHead, b as addAttribute, r as renderTemplate, a as createAstro, f as renderHead, g as renderSlot, d as renderComponent } from './astro/server_VpJftL98.mjs';
+import { c as createComponent, m as maybeRenderHead, b as addAttribute, r as renderTemplate, a as createAstro, e as renderHead, f as renderSlot, d as renderComponent } from './astro/server_-MRgVDm6.mjs';
 import 'kleur/colors';
 import 'clsx';
-/* empty css                            */
-
-const logoClub = new Proxy({"src":"/_astro/logo_corpmeta.C8OX8TXH.png","width":425,"height":587,"format":"png"}, {
-						get(target, name, receiver) {
-							if (name === 'clone') {
-								return structuredClone(target);
-							}
-							if (name === 'fsPath') {
-								return "C:/Users/SSierra/Documents/DesarrolloClubElMeta/frontend/src/assets/logo_corpmeta.png";
-							}
-							
-							return target[name];
-						}
-					});
+import { l as logoClub } from './logo_corpmeta_C3QdZtH-.mjs';
+/* empty css                         */
 
 const $$Navbar = createComponent(($$result, $$props, $$slots) => {
   const links = [
@@ -41,4 +29,4 @@ const $$BaseLayout = createComponent(($$result, $$props, $$slots) => {
 </div> </footer> </body></html>`;
 }, "C:/Users/SSierra/Documents/DesarrolloClubElMeta/frontend/src/layouts/BaseLayout.astro", void 0);
 
-export { $$BaseLayout as $, $$Navbar as a, logoClub as l };
+export { $$BaseLayout as $, $$Navbar as a };

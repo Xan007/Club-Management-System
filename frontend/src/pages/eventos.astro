@@ -30,12 +30,15 @@ try {
       // El backend (Lucid ORM) ya devuelve imagenes como array
       let imagenes = post.imagenes || []
       
+      // Renderizar todo el contenido markdown para el preview
+      const fullContentHtml = marked.parse(post.content || '')
+      
       return {
         id: post.id,
         titulo: post.titulo,
         slug: post.slug,
-        excerpt: post.excerpt,
-        content: marked.parse(post.content || ''),
+        preview: fullContentHtml,
+        content: fullContentHtml,
         imagenes: imagenes,
         publishedAt: post.publishedAt || post.published_at,
         espacioNombre: post.espacio?.nombre || 'Club del Meta'
@@ -132,11 +135,11 @@ try {
             )}
             
             <div class="evento-item__content">
-              <p class="evento-item__excerpt">{post.excerpt}</p>
+              <div class="evento-item__preview" data-preview set:html={post.preview} />
               <div class="evento-item__body collapsible" data-collapsed="true">
                 <div class="collapsible-content" set:html={post.content} />
-                <button class="ver-mas-btn">Ver más</button>
               </div>
+              <button class="ver-mas-btn">Ver más</button>
             </div>
           </article>
         ))
@@ -284,26 +287,89 @@ try {
   }
 
   .evento-item__content {
-    padding: 2rem;
+    padding: 1.5rem 2rem 2rem;
   }
 
-  .evento-item__excerpt {
-    font-size: 1.1rem;
-    color: #475569;
-    font-style: italic;
-    margin: 0 0 1.5rem;
+  .evento-item__preview {
+    font-size: 1.05rem;
+    color: #334155;
+    margin: 0 0 1rem;
     line-height: 1.7;
+    max-height: 150px;
+    overflow: hidden;
+    position: relative;
+  }
+
+  .evento-item__preview::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 40px;
+    background: linear-gradient(to bottom, transparent, white);
+  }
+
+  /* Estilos para markdown en el preview */
+  .evento-item__preview :global(p) {
+    margin: 0.75rem 0;
+    font-size: 1.05rem;
+  }
+
+  .evento-item__preview :global(img) {
+    max-width: 100%;
+    height: auto;
+    border-radius: 8px;
+    margin: 1rem 0;
+  }
+
+  .evento-item__preview :global(h1),
+  .evento-item__preview :global(h2),
+  .evento-item__preview :global(h3) {
+    color: var(--color-primary);
+    margin: 1rem 0 0.5rem;
+    font-size: 1.5rem;
+  }
+
+  .evento-item__preview :global(strong) {
+    color: var(--color-primary);
+    font-weight: 700;
+  }
+
+  .evento-item__preview :global(em) {
+    font-style: italic;
+  }
+
+  .evento-item__preview :global(a) {
+    color: var(--color-primary);
+    text-decoration: underline;
   }
 
   .evento-item__body {
     color: #334155;
     font-size: 1.05rem;
-    line-height: 1.8;
+    line-height: 1.7;
   }
 
   /* Estilos para markdown en el feed */
   .evento-item__body :global(p) {
     margin: 0.75rem 0;
+    font-size: 1.05rem;
+  }
+
+  .evento-item__body :global(h1),
+  .evento-item__body :global(h2),
+  .evento-item__body :global(h3) {
+    color: var(--color-primary);
+    margin: 1rem 0 0.5rem;
+    font-size: 1.5rem;
+  }
+
+  .evento-item__body :global(img) {
+    max-width: 100%;
+    height: auto;
+    border-radius: 8px;
+    margin: 1rem 0;
   }
 
   .evento-item__body :global(strong) {
@@ -349,7 +415,7 @@ try {
   .evento-item__carousel {
     position: relative;
     width: 100%;
-    aspect-ratio: 16/9;
+    aspect-ratio: 16/10;
     overflow: hidden;
     background: #f1f5f9;
   }
@@ -369,6 +435,9 @@ try {
     opacity: 0;
     transition: opacity 0.5s ease;
     pointer-events: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
   }
 
   .carousel-slide.active {
@@ -379,14 +448,14 @@ try {
   .carousel-slide img {
     width: 100%;
     height: 100%;
-    object-fit: cover;
+    object-fit: contain;
     display: block;
     cursor: pointer;
     transition: transform 0.3s ease;
   }
 
   .carousel-slide img:hover {
-    transform: scale(1.05);
+    transform: scale(1.02);
   }
 
   .carousel-btn {
@@ -467,8 +536,14 @@ try {
   }
 
   .collapsible[data-collapsed="false"] .collapsible-content {
-    max-height: 1000px;
+    max-height: none;
+    overflow: visible;
     transition: max-height 0.5s ease;
+  }
+
+  /* Ocultar el degradado del preview cuando está expandido */
+  .evento-item__content:has(.collapsible[data-collapsed="false"]) .evento-item__preview::after {
+    display: none;
   }
 
   .ver-mas-btn {
@@ -668,12 +743,22 @@ try {
   // Ver más / Ver menos
   document.querySelectorAll('.ver-mas-btn').forEach((btn) => {
     btn.addEventListener('click', () => {
-      const collapsible = btn.closest('.collapsible')
+      const content = btn.closest('.evento-item__content')
+      if (!content) return
+      
+      const collapsible = content.querySelector('.collapsible')
+      const preview = content.querySelector('[data-preview]')
+      
       if (!collapsible) return
       
       const isCollapsed = collapsible.getAttribute('data-collapsed') === 'true'
       collapsible.setAttribute('data-collapsed', isCollapsed ? 'false' : 'true')
       btn.textContent = isCollapsed ? 'Ver menos' : 'Ver más'
+      
+      // Ocultar/mostrar preview
+      if (preview) {
+        preview.style.display = isCollapsed ? 'none' : 'block'
+      }
     })
   })
 
