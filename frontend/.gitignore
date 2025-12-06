@@ -1,27 +1,34 @@
-# Dependencies frontend and build
-node_modules
-build
-tmp
+# build output
+dist/
+.output/
 
-# Secrets
+# generated types
+.astro/
+
+# dependencies
+node_modules/
+
+# logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# environment variables
 .env
+.env.production
 .env.local
 .env.production.local
 .env.development.local
 
-.astro
-
-# Frontend assets compiled code
-public/assets
-
-# Build tools specific
-npm-debug.log
-yarn-error.log
-
-# Editors specific
-.fleet
-.idea
-.vscode
-
-# Platform specific
+# macOS-specific files
 .DS_Store
+
+# jetbrains setting folder
+.idea/
+
+# vs code setting folder
+.vscode/
+
+# fleet setting folder
+.fleet/
