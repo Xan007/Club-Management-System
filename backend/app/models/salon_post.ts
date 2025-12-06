@@ -19,9 +19,6 @@ export default class SalonPost extends BaseModel {
   declare slug: string
 
   @column()
-  declare excerpt: string | null
-
-  @column()
   declare content: string
 
   @column()

@@ -106,10 +106,11 @@ export default class SalonPostsController {
         'espacioId',
         'titulo',
         'slug',
-        'excerpt',
         'content',
         'mainImageUrl',
+        'imagenes',
         'publicado',
+        'publishedAt',
       ])
 
       // Generar slug si no viene
@@ -118,12 +119,17 @@ export default class SalonPostsController {
       }
 
       // Si se publica, setear fecha de publicación
-      const publishedAt = data.publicado ? DateTime.now() : null
+      const publishedAt = data.publicado 
+        ? (data.publishedAt ? DateTime.fromISO(data.publishedAt) : DateTime.now())
+        : null
 
       const post = await SalonPost.create({
         ...data,
         publishedAt,
       })
+
+      await post.refresh()
+      await post.load('espacio')
 
       return response.status(201).json({
         success: true,
@@ -190,19 +196,25 @@ export default class SalonPostsController {
         'espacioId',
         'titulo',
         'slug',
-        'excerpt',
         'content',
         'mainImageUrl',
+        'imagenes',
         'publicado',
+        'publishedAt',
       ])
 
       // Si se publica por primera vez, setear fecha de publicación
       if (data.publicado && !post.publicado) {
         post.publishedAt = DateTime.now()
+      } else if (data.publishedAt) {
+        post.publishedAt = DateTime.fromISO(data.publishedAt)
       }
 
       post.merge(data)
       await post.save()
+
+      await post.refresh()
+      await post.load('espacio')
 
       return response.json({
         success: true,
