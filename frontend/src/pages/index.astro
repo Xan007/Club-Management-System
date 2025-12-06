@@ -19,6 +19,13 @@ import heroBackground from 'src/assets/fondoclub.png'
           <img src={logoClub.src} alt="Logo Corporacion Club el Meta" class="hero__logo" />
           <span class="hero__name">Corporacion Club el Meta</span>
         </div>
+        <a href="/admin/login" class="admin-btn" title="Acceso Administrador">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+            <path d="M9 12l2 2 4-4"></path>
+          </svg>
+          Soy Admin
+        </a>
       </header>
 
       <div class="hero__content">
@@ -28,7 +35,7 @@ import heroBackground from 'src/assets/fondoclub.png'
           <span class="hero__headline-bottom">perfecto para tu evento</span>
         </h1>
         <div class="hero__actions">
-          <a class="hero__cta" href="/reservas">Reserva tu espacio aqui</a>
+          <a class="hero__cta" href="/salones">Reserva tu espacio aqui</a>
         </div>
         <p class="hero__subtitle">
           Gestiona y reserva canchas, salones y eventos del Club del Meta en segundos. Conecta a socios, controla
@@ -105,6 +112,28 @@ import heroBackground from 'src/assets/fondoclub.png'
       font-weight: 600;
       letter-spacing: 0.04em;
       text-transform: uppercase;
+    }
+
+    .admin-btn {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      background: rgba(255, 255, 255, 0.15);
+      color: white;
+      padding: 0.75rem 1.25rem;
+      border-radius: 50px;
+      text-decoration: none;
+      font-weight: 600;
+      font-size: 0.9rem;
+      border: 1px solid rgba(255, 255, 255, 0.25);
+      backdrop-filter: blur(8px);
+      transition: all 0.3s ease;
+    }
+
+    .admin-btn:hover {
+      background: rgba(255, 255, 255, 0.25);
+      border-color: rgba(255, 255, 255, 0.4);
+      transform: translateY(-2px);
     }
 
     .hero__languages {

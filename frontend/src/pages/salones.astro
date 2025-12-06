@@ -43,13 +43,10 @@ try {
 
     <div class="salones-grid">
       {salonesData.map((salon) => (
-        <article class="salon-card" data-destacado={salon.destacado}>
-          <div class="salon-card__image" style={`background-image: url(${salon.imagenes[0]?.url || '/src/assets/millanura.jpg'})`}>
-            {salon.destacado && <span class="salon-card__destacado">Destacado</span>}
-          </div>
-          <div class="salon-card__content">
+        <article class="salon-card" data-destacado={salon.destacado} style={`background-image: url(${salon.imagenes[0]?.url || '/src/assets/millanura.jpg'})`}>
+          <div class="salon-card__overlay">
             <div class="salon-card__header">
-              <h2>{salon.nombre}</h2>
+              {salon.destacado && <span class="salon-card__destacado">Destacado</span>}
               <span class="salon-card__capacidad">
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                   <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
@@ -59,6 +56,7 @@ try {
                 </svg>
                 {salon.capacidad.minima} - {salon.capacidad.maxima} personas
               </span>
+              <h2>{salon.nombre}</h2>
             </div>
             <p class="salon-card__subtitulo">{salon.subtitulo}</p>
             <p class="salon-card__descripcion">{salon.descripcionCorta}</p>
@@ -76,15 +74,6 @@ try {
         </article>
       ))}
     </div>
-
-    <!-- Botón de Admin -->
-    <a href="/admin/login" class="admin-btn" title="Acceso Administrador">
-      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
-        <path d="M9 12l2 2 4-4"></path>
-      </svg>
-      Soy Admin
-    </a>
   </section>
 </BaseLayout>
 
@@ -117,40 +106,53 @@ try {
 
   .salones-grid {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 2rem;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 2.5rem 2rem;
     max-width: 1600px;
     margin: 0 auto;
   }
 
   .salon-card {
-    background: white;
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
     border-radius: 16px;
     overflow: hidden;
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
     transition: transform 0.3s ease, box-shadow 0.3s ease;
+    min-height: 420px;
+    position: relative;
+    display: flex;
   }
 
   .salon-card:hover {
     transform: translateY(-8px);
-    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.18), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
   }
 
-  .salon-card[data-destacado="true"] {
+  .salon-card[data-destacado="true"] .salon-card__overlay {
     border: 2px solid var(--color-accent);
+    border-radius: 16px;
   }
 
-  .salon-card__image {
-    height: 220px;
-    background-size: cover;
-    background-position: center;
+  .salon-card__overlay {
+    background: linear-gradient(
+      to bottom,
+      rgba(0, 0, 0, 0.3) 0%,
+      rgba(0, 0, 0, 0.5) 40%,
+      rgba(0, 0, 0, 0.75) 100%
+    );
+    padding: 2rem;
     position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    width: 100%;
+    justify-content: space-between;
   }
 
   .salon-card__destacado {
-    position: absolute;
-    top: 1rem;
-    right: 1rem;
+    display: inline-block;
     background: var(--color-accent);
     color: white;
     padding: 0.35rem 0.75rem;
@@ -159,77 +161,104 @@ try {
     font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 0.05em;
-  }
-
-  .salon-card__content {
-    padding: 1.5rem;
+    margin-bottom: 0.5rem;
+    width: fit-content;
   }
 
   .salon-card__header {
     display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    margin-bottom: 0.5rem;
-    gap: 1rem;
+    flex-direction: column;
+    gap: 0.5rem;
   }
 
   .salon-card__header h2 {
-    font-size: 1.5rem;
-    color: #1e293b;
+    font-size: 2rem;
+    color: #ffffff;
     margin: 0;
     font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.6);
+    line-height: 1.1;
+    transition: letter-spacing 0.18s ease;
+  }
+
+  .salon-card:hover .salon-card__header h2 {
+    letter-spacing: 0.08em;
   }
 
   .salon-card__capacidad {
     display: flex;
     align-items: center;
     gap: 0.35rem;
-    color: #64748b;
+    color: #ffffff;
     font-size: 0.85rem;
-    white-space: nowrap;
+    font-weight: 600;
+    text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.6);
+    padding: 0.5rem 1.1rem;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.2);
+    backdrop-filter: blur(8px);
+    width: fit-content;
+  }
+
+  .salon-card__capacidad svg {
+    color: #ffffff;
   }
 
   .salon-card__subtitulo {
-    color: var(--color-primary);
-    font-weight: 500;
-    margin: 0 0 0.75rem;
-    font-size: 0.95rem;
+    color: #ffffff;
+    font-weight: 600;
+    margin: 0;
+    font-size: 1rem;
+    text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.6);
+    letter-spacing: 0.01em;
   }
 
   .salon-card__descripcion {
-    color: #64748b;
-    font-size: 0.9rem;
+    color: #ffffff;
+    font-size: 0.95rem;
     line-height: 1.6;
-    margin: 0 0 1.25rem;
+    margin: 0;
+    text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.6);
+    flex: 1;
   }
 
   .salon-card__footer {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding-top: 1rem;
-    border-top: 1px solid #e2e8f0;
+    gap: 1rem;
+    margin-top: auto;
   }
 
   .salon-card__precio {
-    font-weight: 600;
-    color: #1e293b;
-    font-size: 0.95rem;
+    font-weight: 700;
+    color: #ffffff;
+    font-size: 1.1rem;
+    text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.6);
   }
 
   .salon-card__btn {
     display: inline-flex;
     align-items: center;
     gap: 0.5rem;
-    color: var(--color-primary);
+    color: #ffffff;
+    background: #0a4ba5;
     text-decoration: none;
     font-weight: 600;
     font-size: 0.9rem;
-    transition: gap 0.2s ease;
+    padding: 0.7rem 1.5rem;
+    border-radius: 999px;
+    transition: all 0.2s ease;
+    box-shadow: 0 8px 18px rgba(10, 75, 165, 0.28);
   }
 
   .salon-card__btn:hover {
     gap: 0.75rem;
+    transform: translateY(-2px);
+    box-shadow: 0 12px 24px rgba(10, 75, 165, 0.36);
+    background: #0842a0;
   }
 
   .salon-card__btn svg {
@@ -240,36 +269,14 @@ try {
     transform: translateX(4px);
   }
 
-  /* Botón Admin flotante */
-  .admin-btn {
-    position: fixed;
-    bottom: 2rem;
-    right: 2rem;
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
-    color: white;
-    padding: 0.875rem 1.25rem;
-    border-radius: 50px;
-    text-decoration: none;
-    font-weight: 600;
-    font-size: 0.9rem;
-    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.2), 0 4px 6px -4px rgba(0, 0, 0, 0.1);
-    transition: all 0.3s ease;
-    z-index: 100;
-  }
-
-  .admin-btn:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.25), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
-    background: linear-gradient(135deg, #334155 0%, #475569 100%);
-  }
-
   /* Responsive */
   @media (max-width: 1024px) {
     .salones-grid {
       grid-template-columns: repeat(2, 1fr);
+    }
+
+    .salon-card {
+      min-height: 380px;
     }
   }
 
@@ -280,11 +287,24 @@ try {
 
     .salones-grid {
       grid-template-columns: 1fr;
+      gap: 1.5rem;
     }
 
-    .salon-card__header {
-      flex-direction: column;
-      gap: 0.5rem;
+    .salon-card {
+      min-height: 400px;
+    }
+
+    .salon-card__overlay {
+      padding: 1.75rem 1.5rem;
+    }
+
+    .salon-card__header h2 {
+      font-size: 1.75rem;
+    }
+
+    .salon-card__capacidad {
+      font-size: 0.8rem;
+      padding: 0.4rem 0.95rem;
     }
 
     .salon-card__footer {
@@ -293,11 +313,41 @@ try {
       align-items: flex-start;
     }
 
-    .admin-btn {
-      bottom: 1rem;
-      right: 1rem;
-      padding: 0.75rem 1rem;
+    .salon-card__btn {
+      width: 100%;
+      justify-content: center;
+    }
+  }
+
+  @media (max-width: 480px) {
+    .salon-card {
+      min-height: 420px;
+    }
+
+    .salon-card__overlay {
+      padding: 1.5rem 1.25rem;
+      gap: 0.85rem;
+    }
+
+    .salon-card__header h2 {
+      font-size: 1.5rem;
+    }
+
+    .salon-card__subtitulo {
+      font-size: 0.9rem;
+    }
+
+    .salon-card__descripcion {
+      font-size: 0.875rem;
+    }
+
+    .salon-card__precio {
+      font-size: 1rem;
+    }
+
+    .salon-card__btn {
       font-size: 0.85rem;
+      padding: 0.6rem 1.25rem;
     }
   }
 </style>
