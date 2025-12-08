@@ -1,3 +1,5 @@
 .vscode
 frontend/.astro/types.d.ts
 frontend/dist/*
+.vercel
+.env*.local

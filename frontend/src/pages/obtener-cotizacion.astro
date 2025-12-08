@@ -1451,7 +1451,7 @@ const espacios = [
       }
     }
 
-    const API_URL = 'http://localhost:3333'
+    const API_URL = (import.meta.env.PUBLIC_BACKEND_URL || 'http://localhost:3333').replace(/\/$/, '')
     
     let currentCotizacionId = null
 

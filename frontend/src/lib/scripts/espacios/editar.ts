@@ -6,6 +6,7 @@ import { Modal } from '../../modal'
 const SUPABASE_URL = import.meta.env.PUBLIC_SUPABASE_URL
 const SUPABASE_KEY = import.meta.env.PUBLIC_SUPABASE_PUBLISHABLE_KEY
 const BUCKET_NAME = 'salones_imagenes'
+const API_URL = (import.meta.env.PUBLIC_BACKEND_URL || 'http://localhost:3333').replace(/\/$/, '')
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_KEY)
 
@@ -256,7 +257,7 @@ function generateSlug(text: string): string {
 
 async function cargarDisposiciones() {
   try {
-    const response = await fetch('http://localhost:3333/api/disposiciones')
+    const response = await fetch(`${API_URL}/api/disposiciones`)
     const result = await response.json()
     if (result.success) {
       disposiciones = result.data
@@ -281,7 +282,7 @@ function renderSelectDisposiciones() {
 
 async function cargarEspacio() {
   try {
-    const response = await fetch(`http://localhost:3333/api/espacios/${espacioId}`)
+    const response = await fetch(`${API_URL}/api/espacios/${espacioId}`)
     if (!response.ok) throw new Error('Error al cargar espacio')
 
     const espacio: Espacio = await response.json()
@@ -326,7 +327,7 @@ async function cargarEspacio() {
 
 async function cargarDisposicionesEspacio() {
   try {
-    const response = await fetch(`http://localhost:3333/api/espacios/${espacioId}/configuraciones`)
+    const response = await fetch(`${API_URL}/api/espacios/${espacioId}/configuraciones`)
     const result = await response.json()
     
     if (result.success && result.data) {
@@ -735,7 +736,7 @@ async function actualizarDisposiciones() {
     const aunExiste = disposicionesEspacio.find(d => d.id === original.id)
     if (!aunExiste && original.id) {
       try {
-        const response = await fetch(`http://localhost:3333/admin/espacios/${espacioId}/configuraciones/${original.id}`, {
+        const response = await fetch(`${API_URL}/admin/espacios/${espacioId}/configuraciones/${original.id}`, {
           method: 'DELETE',
           headers
         })
@@ -770,7 +771,7 @@ async function actualizarDisposiciones() {
             payload.tarifas = disp.tarifas
           }
           
-          const response = await fetch(`http://localhost:3333/admin/espacios/${espacioId}/configuraciones/${disp.id}`, {
+          const response = await fetch(`${API_URL}/admin/espacios/${espacioId}/configuraciones/${disp.id}`, {
             method: 'PUT',
             headers,
             body: JSON.stringify(payload)
@@ -794,7 +795,7 @@ async function actualizarDisposiciones() {
           payload.tarifas = disp.tarifas
         }
         
-        const response = await fetch(`http://localhost:3333/admin/espacios/${espacioId}/configuraciones`, {
+        const response = await fetch(`${API_URL}/admin/espacios/${espacioId}/configuraciones`, {
           method: 'POST',
           headers,
           body: JSON.stringify(payload)
@@ -853,7 +854,7 @@ async function guardarEspacio() {
       return
     }
     
-    const response = await fetch(`http://localhost:3333/api/espacios/${espacioId}`, {
+    const response = await fetch(`${API_URL}/api/espacios/${espacioId}`, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
