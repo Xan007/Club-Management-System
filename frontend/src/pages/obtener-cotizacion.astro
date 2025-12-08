@@ -10,6 +10,8 @@ import terrazaImg from '../assets/terraza.jpg'
 import kioskoImg from '../assets/kiosko.jpg'
 import presidencialImg from '../assets/presidencial.jpg'
 
+const API_URL = (import.meta.env.PUBLIC_BACKEND_URL || 'http://localhost:3333').replace(/\/$/, '')
+
 const imageMap = {
   'MI LLANURA': millanuraImg,
   'BAR': barImg,
@@ -31,7 +33,7 @@ const espacios = [
 ---
 
 <BaseLayout title="Obtener cotización - Club del Meta">
-  <section class="cotizacion">
+  <section class="cotizacion" data-api-url={API_URL}>
     <header class="cotizacion__header">
       <h1>Solicita tu cotización</h1>
       <p>Selecciona el salón, completa los datos y recibe tu propuesta personalizada al instante.</p>
@@ -1451,7 +1453,7 @@ const espacios = [
       }
     }
 
-    const API_URL = (import.meta.env.PUBLIC_BACKEND_URL || 'http://localhost:3333').replace(/\/$/, '')
+    const API_URL = document.querySelector('.cotizacion').getAttribute('data-api-url') || 'http://localhost:3333'
     
     let currentCotizacionId = null
 
