@@ -14,7 +14,6 @@ export const prerender = false
       </div>
       <div class="actions">
         <button id="btnRefrescarEspacios" class="btn secondary">Refrescar</button>
-        <button id="btnPublicarCambios" class="btn" style="background: #16a34a; color: white; display: none;">Publicar Cambios</button>
         <button id="btnNuevoEspacio" class="btn primary">+ Nuevo Salón</button>
       </div>
     </header>
@@ -54,24 +53,6 @@ export const prerender = false
     </div>
   </div>
 
-  <!-- Modal de publicar cambios -->
-  <div id="publicarModal" class="modal-overlay hidden">
-    <div class="modal-publicar">
-      <h3 class="modal-publicar__title">Publicar Cambios</h3>
-      
-      <div class="modal-publicar__info">
-        <p><strong>✓</strong> Esto actualizará el sitio web público con todos los cambios realizados.</p>
-        <p><strong>⏱️</strong> El proceso toma 2-3 minutos y el sitio no se cae durante la publicación.</p>
-      </div>
-
-      <div id="mensajePublicar" class="modal-publicar__mensaje hidden"></div>
-
-      <div class="modal-publicar__actions">
-        <button id="btnCancelarPublicar" class="btn ghost">Cancelar</button>
-        <button id="btnConfirmarPublicar" class="btn" style="background: #16a34a; color: white;">Publicar Ahora</button>
-      </div>
-    </div>
-  </div>
 </AdminLayout>
 
 <script>
@@ -354,76 +335,6 @@ import '@scripts/espacios/lista.ts'
   }
   
   .modal-confirm__actions .btn {
-    flex: 1;
-    justify-content: center;
-  }
-
-  .modal-publicar {
-    background: white;
-    border-radius: 12px;
-    padding: 2rem;
-    max-width: 500px;
-    width: 90%;
-    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
-  }
-
-  .modal-publicar__title {
-    font-size: 1.5rem;
-    font-weight: 700;
-    margin-bottom: 1rem;
-    color: #0f172a;
-  }
-
-  .modal-publicar__info {
-    background: #f0fdf4;
-    border-left: 4px solid #16a34a;
-    padding: 1rem;
-    margin-bottom: 1.5rem;
-    border-radius: 4px;
-  }
-
-  .modal-publicar__info p {
-    margin: 0 0 0.5rem;
-    color: #15803d;
-    font-size: 0.9rem;
-  }
-
-  .modal-publicar__info p:last-child {
-    margin: 0;
-  }
-
-  .modal-publicar__mensaje {
-    padding: 1rem;
-    border-radius: 8px;
-    margin-bottom: 1.5rem;
-    text-align: center;
-  }
-
-  .modal-publicar__mensaje.hidden {
-    display: none;
-  }
-
-  .modal-publicar__mensaje.exito {
-    background: #d1fae5;
-    color: #065f46;
-  }
-
-  .modal-publicar__mensaje.error {
-    background: #fee2e2;
-    color: #991b1b;
-  }
-
-  .modal-publicar__mensaje.info {
-    background: #dbeafe;
-    color: #1e40af;
-  }
-
-  .modal-publicar__actions {
-    display: flex;
-    gap: 0.75rem;
-  }
-
-  .modal-publicar__actions .btn {
     flex: 1;
     justify-content: center;
   }
