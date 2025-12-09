@@ -4,6 +4,9 @@
 # Permitir que Puppeteer descargue Chromium automáticamente
 PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=false
 
+# Configurar cache de Puppeteer en directorio de la app
+PUPPETEER_CACHE_DIR=/home/site/wwwroot/.cache/puppeteer
+
 # Configuración de Node.js
 NODE_ENV=production
 WEBSITE_NODE_DEFAULT_VERSION=20-lts

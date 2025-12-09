@@ -300,6 +300,7 @@ FRONTEND_URL=https://tu-frontend.vercel.app
 
 # Variables para Puppeteer (generación de PDFs)
 PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=false
+PUPPETEER_CACHE_DIR=/home/site/wwwroot/.cache/puppeteer
 WEBSITE_NODE_DEFAULT_VERSION=20-lts
 
 # WhatsApp (opcional)
