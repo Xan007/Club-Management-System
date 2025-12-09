@@ -28,11 +28,9 @@ export class PDFService {
       console.log('Chromium executable path:', executablePath)
       
       browser = await puppeteer.launch({
-        headless: chromium.headless,
-        executablePath,
         args: chromium.args,
-        defaultViewport: chromium.defaultViewport,
-        ignoreHTTPSErrors: true,
+        executablePath,
+        headless: true,
       })
 
       console.log('Browser lanzado exitosamente')
