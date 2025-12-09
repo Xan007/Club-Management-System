@@ -1,0 +1,12 @@
+# Archivo de configuración para Azure Web Service
+
+# Variables de entorno necesarias para Puppeteer
+PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=false
+PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium-browser
+
+# Configuración de Node.js
+NODE_ENV=production
+WEBSITE_NODE_DEFAULT_VERSION=20-lts
+
+# Habilitar logging detallado
+WEBSITE_HTTPLOGGING_RETENTION_DAYS=7

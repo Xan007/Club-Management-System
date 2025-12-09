@@ -17,27 +17,53 @@ export class PDFService {
   static async generarPDF(cotizacion: Cotizacion): Promise<Buffer> {
     const htmlContent = await this.generarCotizacionHTML(cotizacion)
 
+    let browser
     try {
-      const browser = await puppeteer.launch({
+      console.log('Iniciando Puppeteer para generar PDF...')
+      
+      browser = await puppeteer.launch({
         headless: true,
-        args: ['--no-sandbox', '--disable-setuid-sandbox'],
+        args: [
+          '--no-sandbox',
+          '--disable-setuid-sandbox',
+          '--disable-dev-shm-usage',
+          '--disable-accelerated-2d-canvas',
+          '--no-first-run',
+          '--no-zygote',
+          '--single-process',
+          '--disable-gpu'
+        ],
+        executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || undefined,
       })
 
+      console.log('Browser lanzado exitosamente')
       const page = await browser.newPage()
       await page.setContent(htmlContent, { waitUntil: 'networkidle0' })
 
+      console.log('Contenido HTML cargado, generando PDF...')
       const pdfBuffer = await page.pdf({
         format: 'A4',
         margin: { top: 10, right: 10, bottom: 10, left: 10 },
         printBackground: true,
       })
 
+      console.log('PDF generado exitosamente')
       await browser.close()
 
       return Buffer.from(pdfBuffer)
     } catch (error) {
       console.error('Error generando PDF con Puppeteer:', error)
-      throw new Error('Error al generar el PDF')
+      console.error('Detalles del error:', JSON.stringify(error, null, 2))
+      
+      if (browser) {
+        try {
+          await browser.close()
+        } catch (closeError) {
+          console.error('Error cerrando browser:', closeError)
+        }
+      }
+      
+      throw new Error(`Error al generar el PDF: ${error instanceof Error ? error.message : 'Unknown error'}`)
     }
   }
 
@@ -158,9 +184,11 @@ export class PDFService {
   private static cargarCSS(): string {
     try {
       const cssPath = join(__dirname, '../resources/css/pdf_styles.css')
+      console.log('Intentando cargar CSS desde:', cssPath)
       return readFileSync(cssPath, 'utf-8')
     } catch (error) {
-      console.warn('CSS no encontrado:', error)
+      console.warn('CSS no encontrado en:', join(__dirname, '../resources/css/pdf_styles.css'))
+      console.warn('Error:', error)
       return ''
     }
   }
@@ -171,10 +199,12 @@ export class PDFService {
   private static cargarLogoPNG(): string {
     try {
       const logoPath = join(__dirname, '../resources/images/logo_corpmeta.png')
+      console.log('Intentando cargar logo desde:', logoPath)
       const buffer = readFileSync(logoPath)
       return buffer.toString('base64')
     } catch (error) {
-      console.warn('Logo no encontrado:', error)
+      console.warn('Logo no encontrado en:', join(__dirname, '../resources/images/logo_corpmeta.png'))
+      console.warn('Error:', error)
       return ''
     }
   }
@@ -185,9 +215,11 @@ export class PDFService {
   private static cargarPlantilla(): string {
     try {
       const templatePath = join(__dirname, '../resources/templates/pdf_template.html')
+      console.log('Intentando cargar plantilla desde:', templatePath)
       return readFileSync(templatePath, 'utf-8')
     } catch (error) {
-      console.error('Plantilla no encontrada:', error)
+      console.error('Plantilla no encontrada en:', join(__dirname, '../resources/templates/pdf_template.html'))
+      console.error('Error:', error)
       throw new Error('No se pudo cargar la plantilla PDF')
     }
   }

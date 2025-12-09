@@ -35,7 +35,8 @@
     "test": "node ace test",
     "lint": "eslint .",
     "format": "prettier --write .",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "postinstall": "node -e \"try{require('puppeteer').default.launch({headless:true})}catch(e){console.log('Puppeteer check completed')}\""
   },
   "dependencies": {
     "@adonisjs/auth": "^9.4.0",

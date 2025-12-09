@@ -274,12 +274,75 @@
     npm run check
     ```
 
-    ---
+---
 
-    ## 9. Licencia
+## 9. Despliegue en Azure Web Service
 
-    Este proyecto es propiedad de Corporación Club del Meta.
+### 9.1. Configurar Variables de Entorno en Azure
 
-    ## 10. Contacto
+En **Azure Portal** → **App Service** → **Configuration** → **Application settings**:
 
-    Para soporte técnico o consultas sobre el proyecto, contactar al equipo de desarrollo.
+```
+# Variables requeridas
+DB_HOST=aws-0-us-east-1.pooler.supabase.com
+DB_PORT=5432
+DB_USER=postgres.xxxxxxxxxxxxx
+DB_PASSWORD=tu-password-de-supabase
+DB_DATABASE=postgres
+SUPABASE_URL=https://xxxxxxxxxxxxx.supabase.co
+SUPABASE_SECRET_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+SUPABASE_PUBLISHABLE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+RESEND_API_KEY=re_xxxxxxxxxxxxxxxxxxxx
+RESEND_FROM_EMAIL=Club El Meta <noreply@tudominio.com>
+APP_KEY=tu-app-key-de-32-caracteres-minimo
+CORS_ORIGIN=https://tu-frontend.vercel.app
+FRONTEND_URL=https://tu-frontend.vercel.app
+
+# Variables para Puppeteer (generación de PDFs)
+PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=false
+PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium-browser
+WEBSITE_NODE_DEFAULT_VERSION=20-lts
+
+# WhatsApp (opcional)
+WHATSAPP_PHONE_NUMBER_ID=123456789012345
+WHATSAPP_ACCESS_TOKEN=EAAVxxxxxxxxxxxxxxxxxxxxxxxxx
+WHATSAPP_API_VERSION=v22.0
+```
+
+### 9.2. Habilitar Logs
+
+En **Monitoring** → **App Service logs**:
+- **Application Logging**: On (Level: Information)
+- **Web server logging**: File System
+- **Detailed Error Messages**: On
+- **Retention Period**: 7 días
+
+### 9.3. Ver Logs en Tiempo Real
+
+**Opción 1**: Azure Portal → **Monitoring** → **Log stream**
+
+**Opción 2**: Azure CLI
+```powershell
+az webapp log tail --name tu-app-service --resource-group tu-resource-group
+```
+
+**Opción 3**: Kudu Console → **Advanced Tools** → **Go** → **Debug console**
+
+Ver documentación detallada: `backend/COMO_VER_LOGS_AZURE.md`
+
+### 9.4. Solución de Problemas con PDFs
+
+Si la generación de PDFs falla en Azure, revisar:
+- Plan de App Service (mínimo **B1** con 512MB RAM)
+- Logs de Puppeteer en Log Stream
+- Documentación completa: `backend/AZURE_PDF_TROUBLESHOOTING.md`
+
+---
+
+## 10. Licencia
+
+Este proyecto es propiedad de Corporación Club del Meta.
+
+## 11. Contacto
+
+Para soporte técnico o consultas sobre el proyecto, contactar al equipo de desarrollo.
