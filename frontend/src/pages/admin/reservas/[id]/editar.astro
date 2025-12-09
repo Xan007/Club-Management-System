@@ -519,7 +519,7 @@ const { id } = Astro.params
   <script>
     import { getAuthToken } from '../../../../lib/utils/auth'
     
-    const API_URL = import.meta.env.PUBLIC_API_URL || 'http://localhost:3333'
+    const API_URL = import.meta.env.PUBLIC_BACKEND_URL || 'http://localhost:3333'
     const cotizacionId = window.location.pathname.split('/')[3]
     
     console.log('[Editar] Iniciando para cotización ID:', cotizacionId)

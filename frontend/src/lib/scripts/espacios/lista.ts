@@ -191,7 +191,8 @@ async function confirmarEliminar() {
       return
     }
     
-    const response = await fetch(`http://localhost:3333/api/espacios/${espacioId}`, {
+    const backendUrl = (import.meta.env.PUBLIC_BACKEND_URL || 'http://localhost:3333').replace(/\/$/, '')
+    const response = await fetch(`${backendUrl}/api/espacios/${espacioId}`, {
       method: 'DELETE',
       headers: {
         'Authorization': `Bearer ${token}`
@@ -216,7 +217,8 @@ async function cargarEspacios() {
   try {
     container.innerHTML = '<div class="placeholder">Cargando espacios...</div>'
 
-    const response = await fetch('http://localhost:3333/api/espacios')
+    const backendUrl = (import.meta.env.PUBLIC_BACKEND_URL || 'http://localhost:3333').replace(/\/$/, '')
+    const response = await fetch(`${backendUrl}/api/espacios`)
     if (!response.ok) throw new Error('Error al cargar espacios')
 
     const data = await response.json()

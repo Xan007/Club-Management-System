@@ -3,36 +3,26 @@ import BaseLayout from '../../layouts/BaseLayout.astro'
 import Navbar from '../../components/Navbar.astro'
 import { marked } from 'marked'
 
-// Mantener páginas estáticas para mejor rendimiento
-export const prerender = true
+// Deshabilitar prerender para evitar conexión a DB en build time
+export const prerender = false
 
-// Obtener todos los espacios desde la API para generar rutas estáticas
-export async function getStaticPaths() {
-  const API_URL = (import.meta.env.PUBLIC_BACKEND_URL || 'http://localhost:3333').replace(/\/$/, '')
-  
-  try {
-    const response = await fetch(`${API_URL}/api/espacios`)
-    const result = await response.json()
-    
-    if (!result.success || !result.data) {
-      console.error('Error fetching espacios:', result)
-      return []
-    }
+const API_URL = (import.meta.env.PUBLIC_BACKEND_URL || 'http://localhost:3333').replace(/\/$/, '')
 
-    return result.data
-      .filter((espacio: any) => espacio.slug) // Solo espacios con slug
-      .map((espacio: any) => ({
-        params: { slug: espacio.slug },
-        props: { espacio }
-      }))
-  } catch (error) {
-    console.error('Error en getStaticPaths:', error)
-    return []
-  }
-}
-
+// Obtener slug de los parámetros
 const { slug } = Astro.params
-const { espacio } = Astro.props
+
+// Cargar espacio dinámicamente en SSR
+let espacio = null
+try {
+  const response = await fetch(`${API_URL}/api/espacios`)
+  const result = await response.json()
+  
+  if (result.success && result.data) {
+    espacio = result.data.find((e: any) => e.slug === slug)
+  }
+} catch (error) {
+  console.error('Error cargando espacio:', error)
+}
 
 if (!espacio) {
   return Astro.redirect('/salones')
@@ -920,6 +910,30 @@ const urlPortada = imagenPortada?.url || '/src/assets/millanura.jpg'
     }
   }
 
+  @media (max-width: 768px) {
+    .salon-sidebar {
+      grid-template-columns: 1fr;
+      gap: 1rem;
+    }
+
+    .salon-sidebar .back-button {
+      width: 100%;
+      justify-content: center;
+      box-sizing: border-box;
+      padding: 0.75rem 1rem;
+    }
+
+    .salon-info-card {
+      padding: 1.5rem;
+    }
+
+    .cta-button {
+      width: 100%;
+      padding: 1rem 1.25rem;
+      box-sizing: border-box;
+    }
+  }
+
   @media (max-width: 640px) {
     .salon-hero h1 {
       font-size: 2rem;
@@ -929,29 +943,28 @@ const urlPortada = imagenPortada?.url || '/src/assets/millanura.jpg'
       font-size: 1rem;
     }
 
-    .salon-sidebar {
-      grid-template-columns: 1fr;
+    .salon-content-section {
+      padding: 2rem 1rem;
     }
 
     .salon-sidebar .back-button {
-      width: 100%;
-      justify-content: center;
-      font-size: 0.8rem;
-      padding: 0.4rem 0.75rem;
-      gap: 0.35rem;
+      font-size: 0.85rem;
+      padding: 0.7rem 1rem;
+      gap: 0.4rem;
     }
 
     .salon-sidebar .back-button svg {
-      width: 14px;
-      height: 14px;
+      width: 16px;
+      height: 16px;
     }
 
     .salon-info-card {
-      padding: 1.5rem;
+      padding: 1.25rem;
     }
 
     .cta-button {
-      width: 100%;
+      padding: 0.9rem 1rem;
+      font-size: 0.95rem;
     }
 
     .gallery-grid {
@@ -974,6 +987,41 @@ const urlPortada = imagenPortada?.url || '/src/assets/millanura.jpg'
 
     .cta-card {
       padding: 1.5rem;
+    }
+  }
+
+  @media (max-width: 480px) {
+    .salon-content-section {
+      padding: 1.5rem 0.75rem;
+    }
+
+    .salon-sidebar .back-button {
+      font-size: 0.8rem;
+      padding: 0.65rem 0.85rem;
+      gap: 0.35rem;
+    }
+
+    .salon-sidebar .back-button svg {
+      width: 14px;
+      height: 14px;
+    }
+
+    .salon-info-card {
+      padding: 1rem;
+    }
+
+    .info-item {
+      padding: 0.6rem 0;
+    }
+
+    .info-item__icon {
+      width: 36px;
+      height: 36px;
+    }
+
+    .cta-button {
+      padding: 0.85rem 1rem;
+      font-size: 0.9rem;
     }
   }
 </style>
