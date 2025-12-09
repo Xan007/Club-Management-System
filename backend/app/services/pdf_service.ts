@@ -35,13 +35,19 @@ export class PDFService {
 
       console.log('Browser lanzado exitosamente')
       const page = await browser.newPage()
-      await page.setContent(htmlContent, { waitUntil: 'networkidle0' })
+      
+      // Aumentar timeout y usar estrategia más rápida
+      await page.setContent(htmlContent, { 
+        waitUntil: 'domcontentloaded',
+        timeout: 60000 
+      })
 
       console.log('Contenido HTML cargado, generando PDF...')
       const pdfBuffer = await page.pdf({
         format: 'A4',
         margin: { top: 10, right: 10, bottom: 10, left: 10 },
         printBackground: true,
+        timeout: 60000,
       })
 
       console.log('PDF generado exitosamente')
