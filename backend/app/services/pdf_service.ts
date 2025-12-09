@@ -6,7 +6,7 @@ import { readFileSync } from 'fs'
 import { fileURLToPath } from 'url'
 import { dirname, join } from 'path'
 import puppeteer from 'puppeteer-core'
-import chromium from '@sparticuz/chromium'
+import chromium from 'chrome-aws-lambda'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = dirname(__filename)
@@ -22,14 +22,11 @@ export class PDFService {
     try {
       console.log('Iniciando Puppeteer para generar PDF...')
       
-      // Usar chromium optimizado para serverless
-      const executablePath = await chromium.executablePath()
-      console.log('Chromium executable path:', executablePath)
-      
+      // Usar chrome-aws-lambda optimizado para serverless
       browser = await puppeteer.launch({
         args: chromium.args,
-        executablePath: executablePath,
-        headless: true,
+        executablePath: await chromium.executablePath,
+        headless: chromium.headless,
       })
 
       console.log('Browser lanzado exitosamente')
@@ -38,7 +35,7 @@ export class PDFService {
 
       console.log('Contenido HTML cargado, generando PDF...')
       const pdfBuffer = await page.pdf({
-        format: 'A4',
+        format: 'a4',
         margin: { top: 10, right: 10, bottom: 10, left: 10 },
         printBackground: true,
       })
