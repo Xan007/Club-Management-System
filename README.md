@@ -298,11 +298,6 @@ APP_KEY=tu-app-key-de-32-caracteres-minimo
 CORS_ORIGIN=https://tu-frontend.vercel.app
 FRONTEND_URL=https://tu-frontend.vercel.app
 
-# Variables para Puppeteer (generación de PDFs)
-PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=false
-PUPPETEER_CACHE_DIR=/home/site/wwwroot/.cache/puppeteer
-WEBSITE_NODE_DEFAULT_VERSION=20-lts
-
 # WhatsApp (opcional)
 WHATSAPP_PHONE_NUMBER_ID=123456789012345
 WHATSAPP_ACCESS_TOKEN=EAAVxxxxxxxxxxxxxxxxxxxxxxxxx

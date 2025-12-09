@@ -35,12 +35,6 @@ jobs:
         working-directory: ./backend/build
         run: npm ci --omit="dev"
       
-      - name: Install Puppeteer Chromium in build folder
-        working-directory: ./backend/build
-        run: |
-          mkdir -p .cache/puppeteer
-          PUPPETEER_CACHE_DIR=.cache/puppeteer npx puppeteer browsers install chrome || echo "Chromium install completed"
-      
       - name: Copy web.config to build folder
         working-directory: ./backend
         run: cp web.config build/web.config

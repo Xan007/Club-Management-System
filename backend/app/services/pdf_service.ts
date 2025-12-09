@@ -5,7 +5,8 @@ import DatosEmpresa from '#models/datos_empresa'
 import { readFileSync } from 'fs'
 import { fileURLToPath } from 'url'
 import { dirname, join } from 'path'
-import puppeteer from 'puppeteer'
+import puppeteer from 'puppeteer-core'
+import chromium from '@sparticuz/chromium'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = dirname(__filename)
@@ -21,19 +22,15 @@ export class PDFService {
     try {
       console.log('Iniciando Puppeteer para generar PDF...')
       
-      // No especificar executablePath - Puppeteer usará su Chromium incluido
+      // Usar chromium optimizado para serverless
+      const executablePath = await chromium.executablePath()
+      console.log('Chromium executable path:', executablePath)
+      
       browser = await puppeteer.launch({
-        headless: true,
-        args: [
-          '--no-sandbox',
-          '--disable-setuid-sandbox',
-          '--disable-dev-shm-usage',
-          '--disable-accelerated-2d-canvas',
-          '--no-first-run',
-          '--no-zygote',
-          '--single-process',
-          '--disable-gpu'
-        ],
+        args: chromium.args,
+        defaultViewport: chromium.defaultViewport,
+        executablePath: executablePath,
+        headless: chromium.headless,
       })
 
       console.log('Browser lanzado exitosamente')
