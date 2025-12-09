@@ -35,8 +35,7 @@
     "test": "node ace test",
     "lint": "eslint .",
     "format": "prettier --write .",
-    "typecheck": "tsc --noEmit",
-    "postinstall": "npx puppeteer browsers install chrome || echo 'Puppeteer browser install completed'"
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "@adonisjs/auth": "^9.4.0",
