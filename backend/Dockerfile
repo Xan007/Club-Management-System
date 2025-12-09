@@ -1,29 +1,90 @@
-FROM node:22.16.0-alpine3.22 AS base
+# ============================================
+# Stage 1: Build
+# ============================================
+FROM node:20-slim AS build
 
-# All deps stage
-FROM base AS deps
+# Instalar dependencias del sistema necesarias para el build
+RUN apt-get update && apt-get install -y \
+    python3 \
+    make \
+    g++ \
+    && rm -rf /var/lib/apt/lists/*
+
 WORKDIR /app
-ADD package.json package-lock.json ./
+
+# Copiar archivos de dependencias
+COPY package.json package-lock.json ./
+
+# Instalar todas las dependencias (incluyendo dev)
 RUN npm ci
 
-# Production only deps stage
-FROM base AS production-deps
-WORKDIR /app
-ADD package.json package-lock.json ./
-RUN npm ci --omit=dev
+# Copiar código fuente
+COPY . .
 
-# Build stage
-FROM base AS build
-WORKDIR /app
-COPY --from=deps /app/node_modules /app/node_modules
-ADD . .
+# Build del proyecto
 RUN node ace build
 
-# Production stage
-FROM base
-ENV NODE_ENV=production
+# ============================================
+# Stage 2: Production
+# ============================================
+FROM node:20-slim
+
+# Instalar dependencias del sistema para Puppeteer/Chromium
+RUN apt-get update && apt-get install -y \
+    chromium \
+    chromium-sandbox \
+    fonts-liberation \
+    fonts-noto-color-emoji \
+    fonts-noto-cjk \
+    libnss3 \
+    libatk-bridge2.0-0 \
+    libdrm2 \
+    libxkbcommon0 \
+    libxcomposite1 \
+    libxdamage1 \
+    libxfixes3 \
+    libxrandr2 \
+    libgbm1 \
+    libasound2 \
+    libpangocairo-1.0-0 \
+    libpango-1.0-0 \
+    libcairo2 \
+    libatspi2.0-0 \
+    libcups2 \
+    libdbus-1-3 \
+    libxshmfence1 \
+    libglib2.0-0 \
+    ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
+
+# Crear usuario no-root para seguridad
+RUN groupadd -r nodeapp && useradd -r -g nodeapp -G audio,video nodeapp \
+    && mkdir -p /home/nodeapp/Downloads \
+    && chown -R nodeapp:nodeapp /home/nodeapp
+
+# Configurar variables de entorno para Puppeteer
+ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true \
+    PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium \
+    NODE_ENV=production \
+    PORT=8080
+
 WORKDIR /app
-COPY --from=production-deps /app/node_modules /app/node_modules
-COPY --from=build /app/build /app
+
+# Copiar el build desde la stage anterior
+COPY --from=build --chown=nodeapp:nodeapp /app/build ./
+
+# Instalar solo dependencias de producción
+RUN npm ci --omit=dev
+
+# Cambiar al usuario no-root
+USER nodeapp
+
+# Exponer puerto
 EXPOSE 8080
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
+    CMD node -e "require('http').get('http://localhost:8080/health', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})"
+
+# Comando de inicio
 CMD ["node", "./bin/server.js"]

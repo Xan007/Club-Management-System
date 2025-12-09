@@ -21,9 +21,12 @@ export class PDFService {
     try {
       console.log('Iniciando Puppeteer para generar PDF...')
       
-      // No especificar executablePath - Puppeteer usará su Chromium incluido
+      // Usar Chromium del sistema en Docker, o el de Puppeteer en local
+      const executablePath = process.env.PUPPETEER_EXECUTABLE_PATH || undefined
+      
       browser = await puppeteer.launch({
         headless: true,
+        executablePath,
         args: [
           '--no-sandbox',
           '--disable-setuid-sandbox',
