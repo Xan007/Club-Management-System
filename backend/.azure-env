@@ -1,8 +1,8 @@
 # Archivo de configuración para Azure Web Service
 
 # Variables de entorno necesarias para Puppeteer
+# Permitir que Puppeteer descargue Chromium automáticamente
 PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=false
-PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium-browser
 
 # Configuración de Node.js
 NODE_ENV=production

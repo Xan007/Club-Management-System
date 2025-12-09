@@ -21,6 +21,7 @@ export class PDFService {
     try {
       console.log('Iniciando Puppeteer para generar PDF...')
       
+      // No especificar executablePath - Puppeteer usará su Chromium incluido
       browser = await puppeteer.launch({
         headless: true,
         args: [
@@ -33,7 +34,6 @@ export class PDFService {
           '--single-process',
           '--disable-gpu'
         ],
-        executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || undefined,
       })
 
       console.log('Browser lanzado exitosamente')
