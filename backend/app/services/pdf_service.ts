@@ -5,8 +5,7 @@ import DatosEmpresa from '#models/datos_empresa'
 import { readFileSync } from 'fs'
 import { fileURLToPath } from 'url'
 import { dirname, join } from 'path'
-import puppeteer from 'puppeteer-core'
-import chromium from 'chrome-aws-lambda'
+import puppeteer from 'puppeteer'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = dirname(__filename)
@@ -22,11 +21,19 @@ export class PDFService {
     try {
       console.log('Iniciando Puppeteer para generar PDF...')
       
-      // Usar chrome-aws-lambda optimizado para serverless
+      // No especificar executablePath - Puppeteer usará su Chromium incluido
       browser = await puppeteer.launch({
-        args: chromium.args,
-        executablePath: await chromium.executablePath,
-        headless: chromium.headless,
+        headless: true,
+        args: [
+          '--no-sandbox',
+          '--disable-setuid-sandbox',
+          '--disable-dev-shm-usage',
+          '--disable-accelerated-2d-canvas',
+          '--no-first-run',
+          '--no-zygote',
+          '--single-process',
+          '--disable-gpu'
+        ],
       })
 
       console.log('Browser lanzado exitosamente')
@@ -35,7 +42,7 @@ export class PDFService {
 
       console.log('Contenido HTML cargado, generando PDF...')
       const pdfBuffer = await page.pdf({
-        format: 'a4',
+        format: 'A4',
         margin: { top: 10, right: 10, bottom: 10, left: 10 },
         printBackground: true,
       })
