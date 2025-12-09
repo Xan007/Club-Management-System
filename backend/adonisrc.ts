@@ -30,6 +30,10 @@ export default defineConfig({
       pattern: 'app/resources/**/*',
       reloadServer: false,
     },
+    {
+      pattern: '.puppeteerrc.cjs',
+      reloadServer: false,
+    },
   ],
 
   /*
