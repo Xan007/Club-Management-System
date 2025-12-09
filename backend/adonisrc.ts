@@ -18,6 +18,22 @@ export default defineConfig({
 
   /*
   |--------------------------------------------------------------------------
+  | Meta Files
+  |--------------------------------------------------------------------------
+  |
+  | A collection of files you want to copy to the build folder when creating
+  | the production build.
+  |
+  */
+  metaFiles: [
+    {
+      pattern: 'app/resources/**/*',
+      reloadServer: false,
+    },
+  ],
+
+  /*
+  |--------------------------------------------------------------------------
   | Commands
   |--------------------------------------------------------------------------
   |
