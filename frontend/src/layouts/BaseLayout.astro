@@ -1,5 +1,6 @@
 ---
 import Navbar from '../components/Navbar.astro'
+import AccessibilityToolbar from '../components/AccessibilityToolbar.astro'
 import faviconIco from '../assets/logo_corpmeta.ico'
 
 interface Props {
@@ -35,6 +36,7 @@ const {
       href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
       rel="stylesheet"
     />
+    <link rel="stylesheet" href="/styles/accessibility.css" />
     <style>
       :root {
         color-scheme: light;
@@ -192,7 +194,7 @@ const {
         position: fixed;
         width: 60px;
         height: 60px;
-        bottom: 30px;
+        bottom: 100px;
         right: 30px;
         background-color: #25d366;
         color: #FFF;
@@ -227,9 +229,12 @@ const {
   </head>
   <body class={fullWidth ? 'layout layout--full' : 'layout'}>
     {!hideNavbar && <Navbar />}
-    <main class={fullWidth ? 'main main--full' : 'main'}>
+    <main id="main-content" class={fullWidth ? 'main main--full' : 'main'}>
       <slot />
     </main>
+
+    <!-- Herramientas de accesibilidad -->
+    <AccessibilityToolbar />
 
     <!-- Botón flotante de WhatsApp -->
     <a 

@@ -1,0 +1,548 @@
+---
+// Componente de barra de herramientas de accesibilidad
+---
+
+<div class="accessibility-toolbar" id="accessibility-toolbar">
+  <button 
+    class="accessibility-toggle" 
+    id="accessibility-toggle"
+    aria-label="Abrir herramientas de accesibilidad"
+    title="Accesibilidad"
+  >
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <circle cx="12" cy="12" r="10"></circle>
+      <circle cx="12" cy="8" r="1.5" fill="currentColor"></circle>
+      <path d="M12 10v5"></path>
+      <path d="M8 13h8"></path>
+    </svg>
+  </button>
+
+  <div class="accessibility-panel" id="accessibility-panel">
+    <div class="accessibility-header">
+      <h3>Opciones de Accesibilidad</h3>
+      <button 
+        class="close-btn" 
+        id="close-accessibility"
+        aria-label="Cerrar herramientas de accesibilidad"
+      >
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="18" y1="6" x2="6" y2="18"></line>
+          <line x1="6" y1="6" x2="18" y2="18"></line>
+        </svg>
+      </button>
+    </div>
+
+    <div class="accessibility-options">
+      <div class="option-group">
+        <label class="option-label">Tamaño de Texto</label>
+        <div class="button-group">
+          <button class="option-btn" data-action="font-size-small" title="Texto pequeño">
+            <span class="text-size-icon">A</span>
+          </button>
+          <button class="option-btn active" data-action="font-size-normal" title="Texto normal">
+            <span class="text-size-icon medium">A</span>
+          </button>
+          <button class="option-btn" data-action="font-size-large" title="Texto grande">
+            <span class="text-size-icon large">A</span>
+          </button>
+          <button class="option-btn" data-action="font-size-xlarge" title="Texto extra grande">
+            <span class="text-size-icon xlarge">A</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="option-group">
+        <label class="option-label">Espaciado de Líneas</label>
+        <div class="button-group">
+          <button class="option-btn" data-action="line-spacing-normal" title="Espaciado normal">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="4" y1="6" x2="20" y2="6"></line>
+              <line x1="4" y1="12" x2="20" y2="12"></line>
+              <line x1="4" y1="18" x2="20" y2="18"></line>
+            </svg>
+          </button>
+          <button class="option-btn" data-action="line-spacing-large" title="Espaciado amplio">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="4" y1="4" x2="20" y2="4"></line>
+              <line x1="4" y1="12" x2="20" y2="12"></line>
+              <line x1="4" y1="20" x2="20" y2="20"></line>
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <div class="option-group">
+        <button class="option-toggle" data-action="high-contrast">
+          <span class="toggle-label">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10"></circle>
+              <path d="M12 2v20"></path>
+            </svg>
+            Alto Contraste
+          </span>
+          <span class="toggle-indicator"></span>
+        </button>
+      </div>
+
+      <div class="option-group">
+        <button class="option-toggle" data-action="underline-links">
+          <span class="toggle-label">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M6 3v7a6 6 0 0 0 6 6 6 6 0 0 0 6-6V3"></path>
+              <line x1="4" y1="21" x2="20" y2="21"></line>
+            </svg>
+            Subrayar Enlaces
+          </span>
+          <span class="toggle-indicator"></span>
+        </button>
+      </div>
+
+      <div class="option-group">
+        <button class="option-toggle" data-action="grayscale">
+          <span class="toggle-label">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10"></circle>
+              <path d="M12 2a10 10 0 0 1 0 20" fill="currentColor"></path>
+            </svg>
+            Escala de Grises
+          </span>
+          <span class="toggle-indicator"></span>
+        </button>
+      </div>
+
+      <div class="option-group">
+        <button class="option-toggle" data-action="readable-font">
+          <span class="toggle-label">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M4 7V4h16v3"></path>
+              <path d="M9 20h6"></path>
+              <path d="M12 4v16"></path>
+            </svg>
+            Fuente Legible
+          </span>
+          <span class="toggle-indicator"></span>
+        </button>
+      </div>
+
+      <div class="option-group">
+        <button class="reset-btn" data-action="reset">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"></path>
+            <path d="M21 3v5h-5"></path>
+            <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"></path>
+            <path d="M3 21v-5h5"></path>
+          </svg>
+          Restablecer Configuración
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+  .accessibility-toolbar {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    z-index: 9999;
+  }
+
+  .accessibility-toggle {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: #0a4ba5;
+    color: white;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 12px rgba(10, 75, 165, 0.3);
+    transition: all 0.3s ease;
+  }
+
+  .accessibility-toggle:hover {
+    background: #083d8a;
+    box-shadow: 0 6px 16px rgba(10, 75, 165, 0.4);
+    transform: scale(1.05);
+  }
+
+  .accessibility-panel {
+    position: absolute;
+    bottom: 70px;
+    right: 0;
+    width: 320px;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+    display: none;
+    animation: slideUp 0.3s ease;
+  }
+
+  .accessibility-panel.open {
+    display: block;
+  }
+
+  @keyframes slideUp {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .accessibility-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem 1.25rem;
+    border-bottom: 1px solid #e5e7eb;
+  }
+
+  .accessibility-header h3 {
+    margin: 0;
+    font-size: 1rem;
+    font-weight: 600;
+    color: #1f2933;
+  }
+
+  .close-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 4px;
+    color: #6b7280;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+  }
+
+  .close-btn:hover {
+    background: #f3f4f6;
+    color: #1f2933;
+  }
+
+  .accessibility-options {
+    padding: 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    max-height: 500px;
+    overflow-y: auto;
+  }
+
+  .option-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .option-label {
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: #374151;
+  }
+
+  .button-group {
+    display: flex;
+    gap: 0.5rem;
+  }
+
+  .option-btn {
+    flex: 1;
+    padding: 0.625rem;
+    background: #f9fafb;
+    border: 2px solid #e5e7eb;
+    border-radius: 8px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+    color: #374151;
+  }
+
+  .option-btn:hover {
+    background: #f3f4f6;
+    border-color: #d1d5db;
+  }
+
+  .option-btn.active {
+    background: #dbeafe;
+    border-color: #0a4ba5;
+    color: #0a4ba5;
+  }
+
+  .text-size-icon {
+    font-size: 14px;
+    font-weight: 600;
+  }
+
+  .text-size-icon.medium {
+    font-size: 16px;
+  }
+
+  .text-size-icon.large {
+    font-size: 18px;
+  }
+
+  .text-size-icon.xlarge {
+    font-size: 20px;
+  }
+
+  .option-toggle {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    background: #f9fafb;
+    border: 2px solid #e5e7eb;
+    border-radius: 8px;
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    transition: all 0.2s ease;
+  }
+
+  .option-toggle:hover {
+    background: #f3f4f6;
+    border-color: #d1d5db;
+  }
+
+  .option-toggle.active {
+    background: #dbeafe;
+    border-color: #0a4ba5;
+  }
+
+  .toggle-label {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: #374151;
+  }
+
+  .toggle-indicator {
+    width: 40px;
+    height: 22px;
+    background: #d1d5db;
+    border-radius: 11px;
+    position: relative;
+    transition: background 0.3s ease;
+  }
+
+  .toggle-indicator::after {
+    content: '';
+    position: absolute;
+    width: 18px;
+    height: 18px;
+    background: white;
+    border-radius: 50%;
+    top: 2px;
+    left: 2px;
+    transition: transform 0.3s ease;
+  }
+
+  .option-toggle.active .toggle-indicator {
+    background: #0a4ba5;
+  }
+
+  .option-toggle.active .toggle-indicator::after {
+    transform: translateX(18px);
+  }
+
+  .reset-btn {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    background: #fee2e2;
+    border: 2px solid #fca5a5;
+    border-radius: 8px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: #dc2626;
+    transition: all 0.2s ease;
+  }
+
+  .reset-btn:hover {
+    background: #fecaca;
+    border-color: #f87171;
+  }
+
+  @media (max-width: 768px) {
+    .accessibility-toolbar {
+      bottom: 15px;
+      right: 15px;
+    }
+
+    .accessibility-toggle {
+      width: 48px;
+      height: 48px;
+    }
+
+    .accessibility-panel {
+      width: calc(100vw - 30px);
+      max-width: 320px;
+    }
+  }
+</style>
+
+<script>
+  // Funciones de gestión de accesibilidad
+  const AccessibilityManager = {
+    settings: {
+      fontSize: 'normal',
+      lineSpacing: 'normal',
+      highContrast: false,
+      underlineLinks: false,
+      grayscale: false,
+      readableFont: false
+    },
+
+    init() {
+      this.loadSettings();
+      this.applySettings();
+      this.attachEventListeners();
+    },
+
+    loadSettings() {
+      const saved = localStorage.getItem('accessibility-settings');
+      if (saved) {
+        this.settings = { ...this.settings, ...JSON.parse(saved) };
+      }
+    },
+
+    saveSettings() {
+      localStorage.setItem('accessibility-settings', JSON.stringify(this.settings));
+    },
+
+    applySettings() {
+      const html = document.documentElement;
+      
+      // Remover todas las clases de accesibilidad
+      html.classList.remove(
+        'a11y-font-small', 'a11y-font-normal', 'a11y-font-large', 'a11y-font-xlarge',
+        'a11y-line-spacing-normal', 'a11y-line-spacing-large',
+        'a11y-high-contrast', 'a11y-underline-links', 'a11y-grayscale', 'a11y-readable-font'
+      );
+
+      // Aplicar configuración de tamaño de fuente
+      html.classList.add(`a11y-font-${this.settings.fontSize}`);
+      
+      // Aplicar configuración de espaciado
+      html.classList.add(`a11y-line-spacing-${this.settings.lineSpacing}`);
+
+      // Aplicar toggles
+      if (this.settings.highContrast) html.classList.add('a11y-high-contrast');
+      if (this.settings.underlineLinks) html.classList.add('a11y-underline-links');
+      if (this.settings.grayscale) html.classList.add('a11y-grayscale');
+      if (this.settings.readableFont) html.classList.add('a11y-readable-font');
+
+      // Actualizar UI
+      this.updateUI();
+    },
+
+    updateUI() {
+      // Actualizar botones de tamaño de fuente
+      document.querySelectorAll('[data-action^="font-size-"]').forEach(btn => {
+        const size = btn.dataset.action.replace('font-size-', '');
+        btn.classList.toggle('active', this.settings.fontSize === size);
+      });
+
+      // Actualizar botones de espaciado
+      document.querySelectorAll('[data-action^="line-spacing-"]').forEach(btn => {
+        const spacing = btn.dataset.action.replace('line-spacing-', '');
+        btn.classList.toggle('active', this.settings.lineSpacing === spacing);
+      });
+
+      // Actualizar toggles
+      const toggles = {
+        'high-contrast': this.settings.highContrast,
+        'underline-links': this.settings.underlineLinks,
+        'grayscale': this.settings.grayscale,
+        'readable-font': this.settings.readableFont
+      };
+
+      Object.entries(toggles).forEach(([action, isActive]) => {
+        const btn = document.querySelector(`[data-action="${action}"]`);
+        if (btn) btn.classList.toggle('active', isActive);
+      });
+    },
+
+    handleAction(action: string) {
+      if (action.startsWith('font-size-')) {
+        this.settings.fontSize = action.replace('font-size-', '');
+      } else if (action.startsWith('line-spacing-')) {
+        this.settings.lineSpacing = action.replace('line-spacing-', '');
+      } else if (action === 'high-contrast') {
+        this.settings.highContrast = !this.settings.highContrast;
+      } else if (action === 'underline-links') {
+        this.settings.underlineLinks = !this.settings.underlineLinks;
+      } else if (action === 'grayscale') {
+        this.settings.grayscale = !this.settings.grayscale;
+      } else if (action === 'readable-font') {
+        this.settings.readableFont = !this.settings.readableFont;
+      } else if (action === 'reset') {
+        this.settings = {
+          fontSize: 'normal',
+          lineSpacing: 'normal',
+          highContrast: false,
+          underlineLinks: false,
+          grayscale: false,
+          readableFont: false
+        };
+      }
+
+      this.saveSettings();
+      this.applySettings();
+    },
+
+    attachEventListeners() {
+      const toggle = document.getElementById('accessibility-toggle');
+      const panel = document.getElementById('accessibility-panel');
+      const closeBtn = document.getElementById('close-accessibility');
+
+      toggle?.addEventListener('click', () => {
+        panel?.classList.toggle('open');
+      });
+
+      closeBtn?.addEventListener('click', () => {
+        panel?.classList.remove('open');
+      });
+
+      // Cerrar al hacer clic fuera
+      document.addEventListener('click', (e) => {
+        const target = e.target as HTMLElement;
+        if (!target.closest('.accessibility-toolbar')) {
+          panel?.classList.remove('open');
+        }
+      });
+
+      // Manejar acciones
+      document.querySelectorAll('[data-action]').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const action = (btn as HTMLElement).dataset.action;
+          if (action) this.handleAction(action);
+        });
+      });
+    }
+  };
+
+  // Inicializar cuando el DOM esté listo
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => AccessibilityManager.init());
+  } else {
+    AccessibilityManager.init();
+  }
+</script>

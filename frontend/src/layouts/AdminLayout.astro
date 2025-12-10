@@ -1,6 +1,7 @@
 ---
 import logoCorpmeta from '../assets/logo_corpmeta.png'
 import faviconIco from '../assets/logo_corpmeta.ico'
+import AccessibilityToolbar from '../components/AccessibilityToolbar.astro'
 
 interface Props {
   title?: string
@@ -23,6 +24,7 @@ const { title = 'Panel Admin - Club del Meta', active = 'reservas' } = Astro.pro
       href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
       rel="stylesheet"
     />
+    <link rel="stylesheet" href="/styles/accessibility.css" />
     <style>
       :root {
         color-scheme: light;
@@ -279,10 +281,13 @@ const { title = 'Panel Admin - Club del Meta', active = 'reservas' } = Astro.pro
           <button class="nav-item" id="logoutBtn">🚪 Cerrar sesión</button>
         </div>
       </aside>
-      <main class="content">
+      <main id="main-content" class="content">
         <slot />
       </main>
     </div>
+
+    <!-- Herramientas de accesibilidad -->
+    <AccessibilityToolbar />
 
     <script>
       import { checkAuthOnLoad, setupGlobalAuthInterceptor, setupAutoTokenRefresh } from '../lib/auth-guard'

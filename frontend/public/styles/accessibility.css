@@ -1,0 +1,290 @@
+/* Estilos globales de accesibilidad */
+
+/* Tamaños de fuente */
+html.a11y-font-small {
+  font-size: 14px;
+}
+
+html.a11y-font-normal {
+  font-size: 16px;
+}
+
+html.a11y-font-large {
+  font-size: 18px;
+}
+
+html.a11y-font-xlarge {
+  font-size: 20px;
+}
+
+/* Espaciado de líneas */
+html.a11y-line-spacing-normal * {
+  line-height: 1.5;
+}
+
+html.a11y-line-spacing-large * {
+  line-height: 1.8;
+}
+
+html.a11y-line-spacing-large p,
+html.a11y-line-spacing-large li,
+html.a11y-line-spacing-large div {
+  line-height: 2;
+}
+
+/* Alto contraste */
+html.a11y-high-contrast {
+  --color-primary: #0066ff !important;
+  --color-secondary: #000000 !important;
+  --color-accent: #ff6600 !important;
+  --color-background: #ffffff !important;
+  --color-surface: #ffffff !important;
+  --color-text: #000000 !important;
+  --color-bg: #ffffff !important;
+  --color-panel: #ffffff !important;
+  --color-card: #ffffff !important;
+  --color-border: #000000 !important;
+  --color-muted: #333333 !important;
+}
+
+html.a11y-high-contrast body {
+  background: #ffffff !important;
+  color: #000000 !important;
+}
+
+html.a11y-high-contrast * {
+  border-color: #000000 !important;
+}
+
+html.a11y-high-contrast a {
+  color: #0066ff !important;
+  font-weight: 600;
+}
+
+html.a11y-high-contrast button {
+  border: 2px solid #000000 !important;
+  background: #ffffff !important;
+  color: #000000 !important;
+}
+
+html.a11y-high-contrast button:hover,
+html.a11y-high-contrast button:focus {
+  background: #000000 !important;
+  color: #ffffff !important;
+}
+
+html.a11y-high-contrast .sidebar {
+  background: #000000 !important;
+  color: #ffffff !important;
+}
+
+html.a11y-high-contrast input,
+html.a11y-high-contrast textarea,
+html.a11y-high-contrast select {
+  border: 2px solid #000000 !important;
+  background: #ffffff !important;
+  color: #000000 !important;
+}
+
+/* Subrayar enlaces */
+html.a11y-underline-links a {
+  text-decoration: underline !important;
+  text-underline-offset: 3px;
+  text-decoration-thickness: 2px;
+}
+
+html.a11y-underline-links a:hover {
+  text-decoration-thickness: 3px;
+}
+
+html.a11y-underline-links button {
+  text-decoration: none !important;
+}
+
+/* Escala de grises */
+html.a11y-grayscale {
+  filter: grayscale(100%);
+  -webkit-filter: grayscale(100%);
+}
+
+html.a11y-grayscale img,
+html.a11y-grayscale video {
+  filter: grayscale(100%);
+  -webkit-filter: grayscale(100%);
+}
+
+/* Fuente legible */
+html.a11y-readable-font,
+html.a11y-readable-font * {
+  font-family: 'Arial', 'Helvetica', sans-serif !important;
+  letter-spacing: 0.05em;
+}
+
+html.a11y-readable-font h1,
+html.a11y-readable-font h2,
+html.a11y-readable-font h3,
+html.a11y-readable-font h4,
+html.a11y-readable-font h5,
+html.a11y-readable-font h6 {
+  font-weight: 700 !important;
+}
+
+html.a11y-readable-font p,
+html.a11y-readable-font li,
+html.a11y-readable-font span,
+html.a11y-readable-font div {
+  font-weight: 400 !important;
+}
+
+/* Mejoras de enfoque para navegación por teclado */
+html.a11y-high-contrast *:focus,
+html.a11y-high-contrast *:focus-visible {
+  outline: 3px solid #0066ff !important;
+  outline-offset: 2px;
+}
+
+*:focus-visible {
+  outline: 2px solid var(--color-primary, #0a4ba5);
+  outline-offset: 2px;
+}
+
+/* Mejorar el contraste de botones deshabilitados */
+html.a11y-high-contrast button:disabled,
+html.a11y-high-contrast input:disabled,
+html.a11y-high-contrast select:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  background: #e0e0e0 !important;
+  color: #666666 !important;
+}
+
+/* Transiciones suaves para cambios de accesibilidad */
+html {
+  transition: font-size 0.3s ease, filter 0.3s ease;
+}
+
+body {
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+* {
+  transition: line-height 0.3s ease, letter-spacing 0.3s ease;
+}
+
+/* Asegurar contraste en elementos específicos */
+html.a11y-high-contrast .card,
+html.a11y-high-contrast .panel,
+html.a11y-high-contrast .modal {
+  background: #ffffff !important;
+  color: #000000 !important;
+  border: 2px solid #000000 !important;
+}
+
+html.a11y-high-contrast .footer,
+html.a11y-high-contrast footer {
+  background: #000000 !important;
+  color: #ffffff !important;
+}
+
+/* Mejorar visibilidad de formularios */
+html.a11y-high-contrast label {
+  font-weight: 600;
+  color: #000000 !important;
+}
+
+html.a11y-high-contrast input:focus,
+html.a11y-high-contrast textarea:focus,
+html.a11y-high-contrast select:focus {
+  border: 3px solid #0066ff !important;
+  box-shadow: 0 0 0 3px rgba(0, 102, 255, 0.3) !important;
+}
+
+/* Mejorar tablas en alto contraste */
+html.a11y-high-contrast table {
+  border: 2px solid #000000 !important;
+}
+
+html.a11y-high-contrast th,
+html.a11y-high-contrast td {
+  border: 1px solid #000000 !important;
+  padding: 0.75rem !important;
+}
+
+html.a11y-high-contrast thead {
+  background: #000000 !important;
+  color: #ffffff !important;
+}
+
+/* Mejorar tooltips y mensajes */
+html.a11y-high-contrast [title]:hover::after,
+html.a11y-high-contrast .tooltip {
+  background: #000000 !important;
+  color: #ffffff !important;
+  border: 2px solid #ffffff !important;
+}
+
+/* Reducir animaciones si se prefiere movimiento reducido */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Mejorar navegación por teclado */
+.skip-to-content {
+  position: absolute;
+  top: -40px;
+  left: 0;
+  background: var(--color-primary, #0a4ba5);
+  color: white;
+  padding: 8px 16px;
+  text-decoration: none;
+  border-radius: 0 0 4px 0;
+  z-index: 10000;
+  font-weight: 600;
+}
+
+.skip-to-content:focus {
+  top: 0;
+}
+
+/* Asegurar que los elementos interactivos tengan suficiente tamaño */
+html.a11y-font-large button,
+html.a11y-font-large a,
+html.a11y-font-large input,
+html.a11y-font-xlarge button,
+html.a11y-font-xlarge a,
+html.a11y-font-xlarge input {
+  min-height: 44px;
+  min-width: 44px;
+  padding: 0.75rem 1rem;
+}
+
+/* Mejorar visibilidad de estados de hover */
+html.a11y-high-contrast a:hover,
+html.a11y-high-contrast button:hover:not(:disabled) {
+  background: #000000 !important;
+  color: #ffffff !important;
+  border: 2px solid #000000 !important;
+}
+
+/* Iconos y SVG en alto contraste */
+html.a11y-high-contrast svg {
+  fill: currentColor;
+  stroke: currentColor;
+}
+
+/* Asegurar legibilidad de código y texto preformateado */
+html.a11y-high-contrast pre,
+html.a11y-high-contrast code {
+  background: #f0f0f0 !important;
+  color: #000000 !important;
+  border: 1px solid #000000 !important;
+}
+
+html.a11y-readable-font pre,
+html.a11y-readable-font code {
+  font-family: 'Courier New', 'Courier', monospace !important;
+}
